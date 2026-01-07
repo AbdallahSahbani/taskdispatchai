@@ -1,168 +1,92 @@
-import { useState } from 'react';
-import { Task } from '@/types/dispatch';
-import { tasks, getZoneById, zones } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { useDispatchState } from '@/hooks/useDispatchState';
+import { dispatchApi } from '@/lib/api';
 import { StatusBadge } from '@/components/StatusBadge';
-import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio } from 'lucide-react';
+import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-
-// Simulated worker view
-const currentWorker = {
-  id: 'w1',
-  name: 'Maria Santos',
-  currentZoneId: 'floor-2-east',
-};
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function WorkerApp() {
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const { workers, tasks, zones, loading } = useDispatchState();
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   const [taskState, setTaskState] = useState<'idle' | 'seen' | 'on_my_way' | 'completed'>('idle');
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // Get tasks assigned to this worker (simulated)
-  const myTasks = tasks.filter(
-    (t) => t.status !== 'completed' && t.zoneId !== currentWorker.currentZoneId
-  ).slice(0, 2);
+  useEffect(() => {
+    if (!selectedWorkerId && workers.length > 0) {
+      const onShiftWorker = workers.find((w) => w.on_shift && w.worker_state?.device_online);
+      if (onShiftWorker) setSelectedWorkerId(onShiftWorker.id);
+    }
+  }, [workers, selectedWorkerId]);
 
-  const currentZone = getZoneById(currentWorker.currentZoneId);
+  const currentWorker = workers.find((w) => w.id === selectedWorkerId);
+  const currentZone = zones.find((z) => z.id === currentWorker?.worker_state?.current_zone);
 
-  const handleSeen = () => {
-    setTaskState('seen');
+  const myTasks = tasks.filter((t) => {
+    const a = t.task_assignments;
+    return a?.worker_id === selectedWorkerId && (a.state === 'pending_ack' || a.state === 'acked');
+  });
+
+  const activeTask = activeTaskId ? tasks.find((t) => t.id === activeTaskId) : null;
+  const activeTaskZone = activeTask ? zones.find((z) => z.id === activeTask.zone_id) : null;
+
+  const handleAction = async (action: 'seen' | 'onmyway' | 'busy' | 'complete') => {
+    if (!activeTask || !selectedWorkerId) return;
+    setActionLoading(true);
+    try {
+      if (action === 'complete') {
+        await dispatchApi.completeTask(activeTask.id, selectedWorkerId);
+        setTaskState('completed');
+        toast.success('Task completed!');
+        setTimeout(() => { setActiveTaskId(null); setTaskState('idle'); }, 1500);
+      } else if (action === 'busy') {
+        await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'busy');
+        toast.info('Task will be reassigned');
+        setActiveTaskId(null); setTaskState('idle');
+      } else if (action === 'onmyway') {
+        await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'onmyway');
+        setTaskState('on_my_way');
+      } else {
+        await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'seen');
+        setTaskState('seen');
+      }
+    } catch { toast.error('Action failed'); }
+    finally { setActionLoading(false); }
   };
 
-  const handleOnMyWay = () => {
-    setTaskState('on_my_way');
-  };
-
-  const handleComplete = () => {
-    setTaskState('completed');
-    setTimeout(() => {
-      setActiveTask(null);
-      setTaskState('idle');
-    }, 1500);
-  };
-
-  const handleBusy = () => {
-    setActiveTask(null);
-    setTaskState('idle');
-  };
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-primary" /></div>;
 
   if (activeTask) {
-    const taskZone = getZoneById(activeTask.zoneId);
-    
+    const aState = activeTask.task_assignments?.state;
+    const effectiveState = aState === 'acked' && taskState === 'idle' ? 'seen' : taskState;
+
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <header className="px-4 py-3 border-b border-border bg-card/50">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setActiveTask(null)} className="p-2 -ml-2">
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <span className="font-mono text-xs text-muted-foreground">
-              {activeTask.id.toUpperCase()}
-            </span>
-          </div>
+        <header className="px-4 py-3 border-b border-border bg-card/50 flex items-center justify-between">
+          <button onClick={() => { setActiveTaskId(null); setTaskState('idle'); }} className="p-2 -ml-2"><X className="w-5 h-5 text-muted-foreground" /></button>
+          <span className="font-mono text-xs text-muted-foreground">TASK-{activeTask.id}</span>
         </header>
-
-        {/* Task Details */}
         <main className="flex-1 p-6 flex flex-col">
           <div className="flex-1 space-y-6">
             <div className="text-center space-y-2">
               <StatusBadge status={activeTask.status} priority={activeTask.priority} />
-              <h1 className="text-2xl font-bold text-foreground">{activeTask.source}</h1>
-              <p className="text-muted-foreground">{activeTask.description}</p>
+              <h1 className="text-2xl font-bold text-foreground capitalize">{activeTask.type}</h1>
+              <p className="text-muted-foreground">{activeTask.type} request at {activeTaskZone?.name}</p>
             </div>
-
             <div className="data-panel space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium text-foreground">{taskZone?.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary">
-                  <Clock className="w-5 h-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="font-medium text-foreground">
-                    {formatDistanceToNow(activeTask.createdAt, { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary">
-                  <Navigation className="w-5 h-5 text-info" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Distance</p>
-                  <p className="font-medium text-foreground">~2 min walk</p>
-                </div>
-              </div>
+              <div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-secondary"><MapPin className="w-5 h-5 text-primary" /></div><div><p className="text-sm text-muted-foreground">Location</p><p className="font-medium text-foreground">{activeTaskZone?.name}</p></div></div>
+              <div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-secondary"><Clock className="w-5 h-5 text-warning" /></div><div><p className="text-sm text-muted-foreground">Created</p><p className="font-medium text-foreground">{formatDistanceToNow(new Date(activeTask.created_at), { addSuffix: true })}</p></div></div>
             </div>
-
-            {/* Status indicator */}
-            {taskState !== 'idle' && (
-              <div className={cn(
-                'data-panel text-center py-4',
-                taskState === 'completed' && 'border-status-completed/50 bg-status-completed/5'
-              )}>
-                <p className={cn(
-                  'font-medium',
-                  taskState === 'seen' && 'text-status-assigned',
-                  taskState === 'on_my_way' && 'text-status-in-progress',
-                  taskState === 'completed' && 'text-status-completed'
-                )}>
-                  {taskState === 'seen' && 'Task Acknowledged'}
-                  {taskState === 'on_my_way' && 'En Route to Location'}
-                  {taskState === 'completed' && '✓ Task Completed'}
-                </p>
-              </div>
-            )}
+            {effectiveState !== 'idle' && <div className={cn('data-panel text-center py-4', effectiveState === 'completed' && 'border-status-completed/50 bg-status-completed/5')}><p className={cn('font-medium', effectiveState === 'seen' && 'text-status-assigned', effectiveState === 'on_my_way' && 'text-status-in-progress', effectiveState === 'completed' && 'text-status-completed')}>{effectiveState === 'seen' && 'Task Acknowledged'}{effectiveState === 'on_my_way' && 'En Route'}{effectiveState === 'completed' && '✓ Completed'}</p></div>}
           </div>
-
-          {/* Action Buttons */}
           <div className="space-y-3 pt-6">
-            {taskState === 'idle' && (
-              <>
-                <Button
-                  onClick={handleSeen}
-                  className="w-full h-14 text-lg bg-primary hover:bg-primary/90"
-                >
-                  <Check className="w-5 h-5 mr-2" />
-                  Seen
-                </Button>
-                <Button
-                  onClick={handleBusy}
-                  variant="outline"
-                  className="w-full h-12"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Busy
-                </Button>
-              </>
-            )}
-            {taskState === 'seen' && (
-              <Button
-                onClick={handleOnMyWay}
-                className="w-full h-14 text-lg bg-status-in-progress hover:bg-status-in-progress/90 text-warning-foreground"
-              >
-                <Navigation className="w-5 h-5 mr-2" />
-                On My Way
-              </Button>
-            )}
-            {taskState === 'on_my_way' && (
-              <Button
-                onClick={handleComplete}
-                className="w-full h-14 text-lg bg-status-completed hover:bg-status-completed/90 text-success-foreground"
-              >
-                <Check className="w-5 h-5 mr-2" />
-                Complete Task
-              </Button>
-            )}
+            {effectiveState === 'idle' && aState === 'pending_ack' && <><Button onClick={() => handleAction('seen')} disabled={actionLoading} className="w-full h-14 text-lg"><Check className="w-5 h-5 mr-2" />Seen</Button><Button onClick={() => handleAction('busy')} disabled={actionLoading} variant="outline" className="w-full h-12"><X className="w-4 h-4 mr-2" />Busy</Button></>}
+            {effectiveState === 'seen' && <Button onClick={() => handleAction('onmyway')} disabled={actionLoading} className="w-full h-14 text-lg bg-status-in-progress hover:bg-status-in-progress/90"><Navigation className="w-5 h-5 mr-2" />On My Way</Button>}
+            {effectiveState === 'on_my_way' && <Button onClick={() => handleAction('complete')} disabled={actionLoading} className="w-full h-14 text-lg bg-status-completed hover:bg-status-completed/90"><Check className="w-5 h-5 mr-2" />Complete</Button>}
           </div>
         </main>
       </div>
@@ -171,86 +95,28 @@ export default function WorkerApp() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="px-4 py-4 border-b border-border bg-card/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="font-medium text-foreground">{currentWorker.name}</p>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="w-3 h-3" />
-              <span>{currentZone?.name}</span>
-            </div>
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-5 h-5 text-primary" /></div>
+          <div className="flex-1">
+            <Select value={selectedWorkerId?.toString() || ''} onValueChange={(v) => setSelectedWorkerId(Number(v))}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select worker" /></SelectTrigger>
+              <SelectContent>{workers.filter(w => w.on_shift).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.name} ({w.role})</SelectItem>)}</SelectContent>
+            </Select>
+            {currentWorker && <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1"><MapPin className="w-3 h-3" /><span>{currentZone?.name || 'Unknown'}</span></div>}
           </div>
         </div>
       </header>
-
-      {/* Main Content */}
       <main className="flex-1 p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-primary animate-pulse" />
-          <h2 className="font-semibold text-foreground">Incoming Tasks</h2>
-        </div>
-
-        {myTasks.length === 0 ? (
-          <div className="data-panel text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-secondary mx-auto mb-4 flex items-center justify-center">
-              <Check className="w-8 h-8 text-status-completed" />
-            </div>
-            <p className="text-foreground font-medium">All caught up!</p>
-            <p className="text-sm text-muted-foreground mt-1">No pending tasks</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {myTasks.map((task) => {
-              const zone = getZoneById(task.zoneId);
-              return (
-                <button
-                  key={task.id}
-                  onClick={() => setActiveTask(task)}
-                  className={cn(
-                    'w-full data-panel text-left transition-all hover:border-primary/30',
-                    task.priority === 'urgent' && 'border-status-urgent/40 animate-pulse-slow'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">{task.source}</span>
-                        <StatusBadge status={task.status} priority={task.priority} />
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1">
-                        {task.description}
-                      </p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {zone?.name}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(task.createdAt, { addSuffix: true })}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex items-center gap-2"><Radio className="w-4 h-4 text-primary animate-pulse" /><h2 className="font-semibold text-foreground">Incoming Tasks</h2><span className="text-sm text-muted-foreground">({myTasks.length})</span></div>
+        {myTasks.length === 0 ? <div className="data-panel text-center py-12"><div className="w-16 h-16 rounded-full bg-secondary mx-auto mb-4 flex items-center justify-center"><Check className="w-8 h-8 text-status-completed" /></div><p className="text-foreground font-medium">All caught up!</p><p className="text-sm text-muted-foreground mt-1">No pending tasks</p></div> : (
+          <div className="space-y-3">{myTasks.map((task) => {
+            const zone = zones.find((z) => z.id === task.zone_id);
+            return <button key={task.id} onClick={() => setActiveTaskId(task.id)} className={cn('w-full data-panel text-left transition-all hover:border-primary/30', task.priority === 'urgent' && 'border-status-urgent/40')}><div className="flex items-center justify-between"><div className="space-y-2"><div className="flex items-center gap-2"><span className="font-medium text-foreground capitalize">{task.type}</span><StatusBadge status={task.status} priority={task.priority} /></div><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{zone?.name}</span><span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}</span></div></div><ChevronRight className="w-5 h-5 text-muted-foreground" /></div></button>;
+          })}</div>
         )}
       </main>
-
-      {/* Bottom Status */}
-      <footer className="p-4 border-t border-border bg-card/50">
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <span className="w-2 h-2 rounded-full bg-status-completed animate-pulse" />
-          <span className="text-muted-foreground">Online • Listening for tasks</span>
-        </div>
-      </footer>
+      <footer className="p-4 border-t border-border bg-card/50"><div className="flex items-center justify-center gap-2 text-sm"><span className={cn('w-2 h-2 rounded-full', currentWorker?.worker_state?.device_online ? 'bg-status-completed animate-pulse' : 'bg-muted-foreground')} /><span className="text-muted-foreground">{currentWorker?.worker_state?.device_online ? 'Online • Listening' : 'Offline'}</span></div></footer>
     </div>
   );
 }
