@@ -1,7 +1,33 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { dispatchApi, subscribeToTasks, subscribeToAssignments, subscribeToWorkerState } from "@/lib/api";
-import type { DbTask, DbWorker, DbZone } from "@/types/dispatch";
+import type { Tables } from "@/integrations/supabase/types";
+
+// Types with joined relations from the API
+export interface DbWorkerState {
+  current_zone: string | null;
+  zone_confidence: number;
+  device_online: boolean;
+  active_task_count: number;
+}
+
+export interface DbTaskAssignment {
+  worker_id: number;
+  state: string;
+  acknowledged_at: string | null;
+  completed_at: string | null;
+  reroutes: number;
+}
+
+export type DbZone = Tables<"zones">;
+
+export type DbWorker = Tables<"workers"> & {
+  worker_state: DbWorkerState | null;
+};
+
+export type DbTask = Tables<"tasks"> & {
+  task_assignments: DbTaskAssignment | null;
+};
 
 interface DispatchState {
   workers: DbWorker[];

@@ -23,19 +23,19 @@ export default function Dashboard() {
   // Transform DB data to display format
   const displayTasks: Task[] = useMemo(() => tasks.map((t) => ({
     id: String(t.id),
-    type: t.type,
+    type: t.type as Task['type'],
     source: `${t.type} request`,
     description: `${t.type} at ${zones.find(z => z.id === t.zone_id)?.name || t.zone_id}`,
     zoneId: t.zone_id,
-    priority: t.priority,
-    status: t.status,
+    priority: t.priority as Task['priority'],
+    status: t.status as Task['status'],
     createdAt: new Date(t.created_at),
   })), [tasks, zones]);
 
   const displayWorkers: Worker[] = useMemo(() => workers.map((w) => ({
     id: String(w.id),
     name: w.name,
-    role: w.role,
+    role: w.role as Worker['role'],
     onShift: w.on_shift,
     currentZoneId: w.worker_state?.current_zone || '',
     deviceStatus: w.worker_state?.device_online ? 'online' : 'offline',
