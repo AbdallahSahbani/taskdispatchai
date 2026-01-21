@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { TaskStatus, Priority } from '@/types/dispatch';
 
 export default function WorkerApp() {
   const { workers, tasks, zones, loading } = useDispatchState();
@@ -73,7 +74,7 @@ export default function WorkerApp() {
         <main className="flex-1 p-6 flex flex-col">
           <div className="flex-1 space-y-6">
             <div className="text-center space-y-2">
-              <StatusBadge status={activeTask.status} priority={activeTask.priority} />
+              <StatusBadge status={activeTask.status as TaskStatus} priority={activeTask.priority as Priority} />
               <h1 className="text-2xl font-bold text-foreground capitalize">{activeTask.type}</h1>
               <p className="text-muted-foreground">{activeTask.type} request at {activeTaskZone?.name}</p>
             </div>
@@ -112,7 +113,7 @@ export default function WorkerApp() {
         {myTasks.length === 0 ? <div className="data-panel text-center py-12"><div className="w-16 h-16 rounded-full bg-secondary mx-auto mb-4 flex items-center justify-center"><Check className="w-8 h-8 text-status-completed" /></div><p className="text-foreground font-medium">All caught up!</p><p className="text-sm text-muted-foreground mt-1">No pending tasks</p></div> : (
           <div className="space-y-3">{myTasks.map((task) => {
             const zone = zones.find((z) => z.id === task.zone_id);
-            return <button key={task.id} onClick={() => setActiveTaskId(task.id)} className={cn('w-full data-panel text-left transition-all hover:border-primary/30', task.priority === 'urgent' && 'border-status-urgent/40')}><div className="flex items-center justify-between"><div className="space-y-2"><div className="flex items-center gap-2"><span className="font-medium text-foreground capitalize">{task.type}</span><StatusBadge status={task.status} priority={task.priority} /></div><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{zone?.name}</span><span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}</span></div></div><ChevronRight className="w-5 h-5 text-muted-foreground" /></div></button>;
+            return <button key={task.id} onClick={() => setActiveTaskId(task.id)} className={cn('w-full data-panel text-left transition-all hover:border-primary/30', task.priority === 'urgent' && 'border-status-urgent/40')}><div className="flex items-center justify-between"><div className="space-y-2"><div className="flex items-center gap-2"><span className="font-medium text-foreground capitalize">{task.type}</span><StatusBadge status={task.status as TaskStatus} priority={task.priority as Priority} /></div><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{zone?.name}</span><span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}</span></div></div><ChevronRight className="w-5 h-5 text-muted-foreground" /></div></button>;
           })}</div>
         )}
       </main>
