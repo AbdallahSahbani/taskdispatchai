@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatchState } from '@/hooks/useDispatchState';
 import { dispatchApi } from '@/lib/api';
-import { useTaskAudio } from '@/lib/taskAudio';
+import { initSpeechSynthesis, notifyWorkerOfTask, playNotificationPing } from '@/lib/speechNotification';
 import { StatusBadge } from '@/components/StatusBadge';
 import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,18 +20,17 @@ export default function WorkerApp() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [audioInitialized, setAudioInitialized] = useState(false);
   
-  const { initAudio, notifyTask, playPing } = useTaskAudio();
   const previousTaskIds = useRef<Set<number>>(new Set());
   const hasInteracted = useRef(false);
 
-  // Initialize audio on first user interaction
+  // Initialize speech synthesis on first user interaction
   const handleUserInteraction = useCallback(async () => {
     if (!hasInteracted.current) {
       hasInteracted.current = true;
-      await initAudio();
+      initSpeechSynthesis();
       setAudioInitialized(true);
     }
-  }, [initAudio]);
+  }, []);
 
   // Select first on-shift worker
   useEffect(() => {
@@ -49,9 +48,9 @@ export default function WorkerApp() {
     return a?.worker_id === selectedWorkerId && (a.state === 'pending_ack' || a.state === 'acked');
   });
 
-  // Watch for new task assignments and play notification
+  // Watch for new task assignments and play speech notification
   useEffect(() => {
-    if (!audioEnabled || !audioInitialized || !selectedWorkerId) return;
+    if (!audioEnabled || !audioInitialized || !selectedWorkerId || !currentWorker) return;
 
     const currentTaskIds = new Set(myTasks.map(t => t.id));
     
@@ -60,16 +59,21 @@ export default function WorkerApp() {
       if (!previousTaskIds.current.has(task.id)) {
         // New task detected!
         const zone = zones.find((z) => z.id === task.zone_id);
-        const priority = task.priority === 'urgent' ? 'urgent' : 'normal';
+        const priority = task.priority === 'urgent' ? 'urgent' : task.priority === 'high' ? 'high' : 'normal';
         
         console.log(`New task notification: ${task.type} at ${zone?.name}`);
         
-        // Play notification
-        notifyTask(
-          task.type,
-          zone?.name || 'Unknown Location',
-          priority,
-          false // Set to true if ElevenLabs is configured for voice
+        // Play speech notification
+        notifyWorkerOfTask(
+          {
+            priority: priority as 'urgent' | 'high' | 'normal',
+            type: task.type,
+            zoneName: zone?.name || 'Unknown Location',
+            roomNumber: undefined // Add room number if available in task data
+          },
+          {
+            name: currentWorker.name
+          }
         );
         
         // Show toast notification
@@ -81,7 +85,7 @@ export default function WorkerApp() {
     });
 
     previousTaskIds.current = currentTaskIds;
-  }, [myTasks, zones, audioEnabled, audioInitialized, selectedWorkerId, notifyTask]);
+  }, [myTasks, zones, audioEnabled, audioInitialized, selectedWorkerId, currentWorker]);
 
   const activeTask = activeTaskId ? tasks.find((t) => t.id === activeTaskId) : null;
   const activeTaskZone = activeTask ? zones.find((z) => z.id === activeTask.zone_id) : null;
@@ -95,7 +99,7 @@ export default function WorkerApp() {
       if (action === 'complete') {
         await dispatchApi.completeTask(activeTask.id, selectedWorkerId);
         setTaskState('completed');
-        if (audioEnabled) playPing('normal');
+        if (audioEnabled) playNotificationPing();
         toast.success('Task completed!');
         setTimeout(() => { setActiveTaskId(null); setTaskState('idle'); }, 1500);
       } else if (action === 'busy') {
@@ -105,11 +109,11 @@ export default function WorkerApp() {
       } else if (action === 'onmyway') {
         await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'onmyway');
         setTaskState('on_my_way');
-        if (audioEnabled) playPing('normal');
+        if (audioEnabled) playNotificationPing();
       } else {
         await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'seen');
         setTaskState('seen');
-        if (audioEnabled) playPing('normal');
+        if (audioEnabled) playNotificationPing();
       }
     } catch { toast.error('Action failed'); }
     finally { setActionLoading(false); }
@@ -119,7 +123,7 @@ export default function WorkerApp() {
     await handleUserInteraction();
     setAudioEnabled(!audioEnabled);
     if (!audioEnabled) {
-      playPing('normal');
+      playNotificationPing();
       toast.success('Audio notifications enabled');
     } else {
       toast.info('Audio notifications disabled');
