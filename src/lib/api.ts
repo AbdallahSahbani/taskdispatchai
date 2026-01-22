@@ -38,6 +38,12 @@ export const dispatchApi = {
     callDispatch("wifi-update", "POST", { worker_id, connected_ap }),
   
   getMetrics: () => callDispatch("metrics", "GET"),
+  
+  createWorker: (name: string, role: string, employee_id: string) =>
+    callDispatch("create-worker", "POST", { name, role, employee_id }),
+  
+  syncWorker: (worker_id: number) =>
+    callDispatch("sync-worker", "POST", { worker_id }),
 };
 
 // Real-time subscriptions

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Workers from "./pages/Workers";
 import WorkerApp from "./pages/WorkerApp";
 import NotFound from "./pages/NotFound";
 
@@ -19,7 +20,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/worker-app" element={<WorkerApp />} />
           <Route path="/tasks" element={<Index />} />
-          <Route path="/workers" element={<Index />} />
+          <Route path="/workers" element={<Workers />} />
           <Route path="/zones" element={<Index />} />
           <Route path="/analytics" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

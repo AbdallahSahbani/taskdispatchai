@@ -522,6 +522,100 @@ Deno.serve(async (req) => {
       );
     }
 
+    // POST /dispatch/create-worker - Add new employee
+    if (req.method === "POST" && path === "create-worker") {
+      const body = await req.json();
+      const { name, role, employee_id } = body;
+
+      if (!name || !role) {
+        return new Response(
+          JSON.stringify({ error: "name and role are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Create worker
+      const { data: worker, error: workerError } = await supabase
+        .from("workers")
+        .insert({
+          name,
+          role,
+          on_shift: false,
+          reliability_score: 0.8,
+        })
+        .select()
+        .single();
+
+      if (workerError) throw workerError;
+
+      // Create worker state
+      await supabase.from("worker_state").insert({
+        worker_id: worker.id,
+        current_zone: null,
+        zone_confidence: 0.5,
+        device_online: false,
+        active_task_count: 0,
+      });
+
+      await supabase.from("dispatch_events").insert({
+        event_type: "worker_created",
+        worker_id: worker.id,
+        payload: { employee_id, name, role },
+      });
+
+      console.log(`Worker created: ${worker.id} - ${name} (${role})`);
+
+      return new Response(
+        JSON.stringify({ worker }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // POST /dispatch/sync-worker - Sync worker app
+    if (req.method === "POST" && path === "sync-worker") {
+      const body = await req.json();
+      const { worker_id } = body;
+
+      if (!worker_id) {
+        return new Response(
+          JSON.stringify({ error: "worker_id is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update worker state with heartbeat
+      const { error } = await supabase
+        .from("worker_state")
+        .update({
+          device_online: true,
+          last_heartbeat_at: new Date().toISOString(),
+        })
+        .eq("worker_id", worker_id);
+
+      if (error) {
+        // If no state exists, create one
+        await supabase.from("worker_state").insert({
+          worker_id,
+          current_zone: null,
+          zone_confidence: 0.5,
+          device_online: true,
+          active_task_count: 0,
+          last_heartbeat_at: new Date().toISOString(),
+        });
+      }
+
+      await supabase.from("dispatch_events").insert({
+        event_type: "worker_sync",
+        worker_id,
+        payload: { timestamp: new Date().toISOString() },
+      });
+
+      return new Response(
+        JSON.stringify({ synced: true, timestamp: new Date().toISOString() }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Not found" }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
