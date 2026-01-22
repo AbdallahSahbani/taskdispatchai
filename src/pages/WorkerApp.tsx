@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatchState } from '@/hooks/useDispatchState';
 import { dispatchApi } from '@/lib/api';
+import { useTaskAudio } from '@/lib/taskAudio';
 import { StatusBadge } from '@/components/StatusBadge';
-import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw } from 'lucide-react';
+import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,23 @@ export default function WorkerApp() {
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   const [taskState, setTaskState] = useState<'idle' | 'seen' | 'on_my_way' | 'completed'>('idle');
   const [actionLoading, setActionLoading] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [audioInitialized, setAudioInitialized] = useState(false);
+  
+  const { initAudio, notifyTask, playPing } = useTaskAudio();
+  const previousTaskIds = useRef<Set<number>>(new Set());
+  const hasInteracted = useRef(false);
 
+  // Initialize audio on first user interaction
+  const handleUserInteraction = useCallback(async () => {
+    if (!hasInteracted.current) {
+      hasInteracted.current = true;
+      await initAudio();
+      setAudioInitialized(true);
+    }
+  }, [initAudio]);
+
+  // Select first on-shift worker
   useEffect(() => {
     if (!selectedWorkerId && workers.length > 0) {
       const onShiftWorker = workers.find((w) => w.on_shift && w.worker_state?.device_online);
@@ -32,16 +49,53 @@ export default function WorkerApp() {
     return a?.worker_id === selectedWorkerId && (a.state === 'pending_ack' || a.state === 'acked');
   });
 
+  // Watch for new task assignments and play notification
+  useEffect(() => {
+    if (!audioEnabled || !audioInitialized || !selectedWorkerId) return;
+
+    const currentTaskIds = new Set(myTasks.map(t => t.id));
+    
+    // Find newly assigned tasks
+    myTasks.forEach((task) => {
+      if (!previousTaskIds.current.has(task.id)) {
+        // New task detected!
+        const zone = zones.find((z) => z.id === task.zone_id);
+        const priority = task.priority === 'urgent' ? 'urgent' : 'normal';
+        
+        console.log(`New task notification: ${task.type} at ${zone?.name}`);
+        
+        // Play notification
+        notifyTask(
+          task.type,
+          zone?.name || 'Unknown Location',
+          priority,
+          false // Set to true if ElevenLabs is configured for voice
+        );
+        
+        // Show toast notification
+        toast.info(
+          `New ${priority === 'urgent' ? '🚨 URGENT ' : ''}task: ${task.type}`,
+          { description: `Location: ${zone?.name}` }
+        );
+      }
+    });
+
+    previousTaskIds.current = currentTaskIds;
+  }, [myTasks, zones, audioEnabled, audioInitialized, selectedWorkerId, notifyTask]);
+
   const activeTask = activeTaskId ? tasks.find((t) => t.id === activeTaskId) : null;
   const activeTaskZone = activeTask ? zones.find((z) => z.id === activeTask.zone_id) : null;
 
   const handleAction = async (action: 'seen' | 'onmyway' | 'busy' | 'complete') => {
     if (!activeTask || !selectedWorkerId) return;
     setActionLoading(true);
+    await handleUserInteraction();
+    
     try {
       if (action === 'complete') {
         await dispatchApi.completeTask(activeTask.id, selectedWorkerId);
         setTaskState('completed');
+        if (audioEnabled) playPing('normal');
         toast.success('Task completed!');
         setTimeout(() => { setActiveTaskId(null); setTaskState('idle'); }, 1500);
       } else if (action === 'busy') {
@@ -51,12 +105,25 @@ export default function WorkerApp() {
       } else if (action === 'onmyway') {
         await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'onmyway');
         setTaskState('on_my_way');
+        if (audioEnabled) playPing('normal');
       } else {
         await dispatchApi.ackTask(activeTask.id, selectedWorkerId, 'seen');
         setTaskState('seen');
+        if (audioEnabled) playPing('normal');
       }
     } catch { toast.error('Action failed'); }
     finally { setActionLoading(false); }
+  };
+
+  const toggleAudio = async () => {
+    await handleUserInteraction();
+    setAudioEnabled(!audioEnabled);
+    if (!audioEnabled) {
+      playPing('normal');
+      toast.success('Audio notifications enabled');
+    } else {
+      toast.info('Audio notifications disabled');
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -66,10 +133,13 @@ export default function WorkerApp() {
     const effectiveState = aState === 'acked' && taskState === 'idle' ? 'seen' : taskState;
 
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col" onClick={handleUserInteraction}>
         <header className="px-4 py-3 border-b border-border bg-card/50 flex items-center justify-between">
           <button onClick={() => { setActiveTaskId(null); setTaskState('idle'); }} className="p-2 -ml-2"><X className="w-5 h-5 text-muted-foreground" /></button>
           <span className="font-mono text-xs text-muted-foreground">TASK-{activeTask.id}</span>
+          <button onClick={toggleAudio} className="p-2 -mr-2">
+            {audioEnabled ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
+          </button>
         </header>
         <main className="flex-1 p-6 flex flex-col">
           <div className="flex-1 space-y-6">
@@ -95,7 +165,7 @@ export default function WorkerApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" onClick={handleUserInteraction}>
       <header className="px-4 py-4 border-b border-border bg-card/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-5 h-5 text-primary" /></div>
@@ -106,18 +176,71 @@ export default function WorkerApp() {
             </Select>
             {currentWorker && <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1"><MapPin className="w-3 h-3" /><span>{currentZone?.name || 'Unknown'}</span></div>}
           </div>
+          <button onClick={toggleAudio} className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+            {audioEnabled ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
+          </button>
         </div>
       </header>
       <main className="flex-1 p-4 space-y-4">
-        <div className="flex items-center gap-2"><Radio className="w-4 h-4 text-primary animate-pulse" /><h2 className="font-semibold text-foreground">Incoming Tasks</h2><span className="text-sm text-muted-foreground">({myTasks.length})</span></div>
-        {myTasks.length === 0 ? <div className="data-panel text-center py-12"><div className="w-16 h-16 rounded-full bg-secondary mx-auto mb-4 flex items-center justify-center"><Check className="w-8 h-8 text-status-completed" /></div><p className="text-foreground font-medium">All caught up!</p><p className="text-sm text-muted-foreground mt-1">No pending tasks</p></div> : (
+        <div className="flex items-center gap-2">
+          <Radio className="w-4 h-4 text-primary animate-pulse" />
+          <h2 className="font-semibold text-foreground">Incoming Tasks</h2>
+          <span className="text-sm text-muted-foreground">({myTasks.length})</span>
+          {audioEnabled && audioInitialized && (
+            <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
+              <Volume2 className="w-3 h-3" /> Audio On
+            </span>
+          )}
+        </div>
+        {myTasks.length === 0 ? (
+          <div className="data-panel text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-secondary mx-auto mb-4 flex items-center justify-center">
+              <Check className="w-8 h-8 text-status-completed" />
+            </div>
+            <p className="text-foreground font-medium">All caught up!</p>
+            <p className="text-sm text-muted-foreground mt-1">No pending tasks</p>
+            {!audioInitialized && (
+              <p className="text-xs text-muted-foreground mt-4">
+                Tap anywhere to enable audio notifications
+              </p>
+            )}
+          </div>
+        ) : (
           <div className="space-y-3">{myTasks.map((task) => {
             const zone = zones.find((z) => z.id === task.zone_id);
-            return <button key={task.id} onClick={() => setActiveTaskId(task.id)} className={cn('w-full data-panel text-left transition-all hover:border-primary/30', task.priority === 'urgent' && 'border-status-urgent/40')}><div className="flex items-center justify-between"><div className="space-y-2"><div className="flex items-center gap-2"><span className="font-medium text-foreground capitalize">{task.type}</span><StatusBadge status={task.status as TaskStatus} priority={task.priority as Priority} /></div><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{zone?.name}</span><span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}</span></div></div><ChevronRight className="w-5 h-5 text-muted-foreground" /></div></button>;
+            return (
+              <button 
+                key={task.id} 
+                onClick={() => setActiveTaskId(task.id)} 
+                className={cn(
+                  'w-full data-panel text-left transition-all hover:border-primary/30',
+                  task.priority === 'urgent' && 'border-status-urgent/40 animate-pulse'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground capitalize">{task.type}</span>
+                      <StatusBadge status={task.status as TaskStatus} priority={task.priority as Priority} />
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{zone?.name}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </button>
+            );
           })}</div>
         )}
       </main>
-      <footer className="p-4 border-t border-border bg-card/50"><div className="flex items-center justify-center gap-2 text-sm"><span className={cn('w-2 h-2 rounded-full', currentWorker?.worker_state?.device_online ? 'bg-status-completed animate-pulse' : 'bg-muted-foreground')} /><span className="text-muted-foreground">{currentWorker?.worker_state?.device_online ? 'Online • Listening' : 'Offline'}</span></div></footer>
+      <footer className="p-4 border-t border-border bg-card/50">
+        <div className="flex items-center justify-center gap-2 text-sm">
+          <span className={cn('w-2 h-2 rounded-full', currentWorker?.worker_state?.device_online ? 'bg-status-completed animate-pulse' : 'bg-muted-foreground')} />
+          <span className="text-muted-foreground">{currentWorker?.worker_state?.device_online ? 'Online • Listening' : 'Offline'}</span>
+        </div>
+      </footer>
     </div>
   );
 }
