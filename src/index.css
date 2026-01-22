@@ -51,6 +51,49 @@
     --info: 199 89% 48%;
     --info-foreground: 220 20% 7%;
 
+    /* Zone category colors - Guest Floors (Blue spectrum) */
+    --zone-floor: 212 50% 24%;
+    --zone-floor-light: 211 45% 32%;
+    --zone-floor-border: 210 70% 55%;
+
+    /* Zone category colors - Public Areas (Teal/Cyan) */
+    --zone-public: 180 74% 18%;
+    --zone-public-light: 180 80% 28%;
+    --zone-public-border: 173 58% 39%;
+
+    /* Zone category colors - Food & Beverage (Warm amber) */
+    --zone-food: 33 93% 25%;
+    --zone-food-light: 35 85% 37%;
+    --zone-food-border: 38 92% 50%;
+
+    /* Zone category colors - Back of House (Purple) */
+    --zone-service: 274 56% 27%;
+    --zone-service-light: 271 76% 53%;
+    --zone-service-border: 263 70% 76%;
+
+    /* Zone category colors - Outdoor (Green) */
+    --zone-outdoor: 142 72% 21%;
+    --zone-outdoor-light: 142 76% 36%;
+    --zone-outdoor-border: 142 69% 58%;
+
+    /* Zone category colors - Utility (Slate gray) */
+    --zone-utility: 215 25% 27%;
+    --zone-utility-light: 215 19% 46%;
+    --zone-utility-border: 215 16% 65%;
+
+    /* Task status colors */
+    --task-urgent: 0 84% 60%;
+    --task-high: 21 90% 48%;
+    --task-pending: 38 92% 50%;
+    --task-progress: 217 91% 60%;
+    --task-complete: 142 76% 36%;
+
+    /* Worker status colors */
+    --worker-available: 142 76% 36%;
+    --worker-busy: 38 92% 50%;
+    --worker-break: 215 16% 47%;
+    --worker-offline: 215 28% 17%;
+
     /* Glow effects */
     --glow-primary: 0 0 20px hsl(199 89% 48% / 0.3);
     --glow-success: 0 0 20px hsl(142 71% 45% / 0.3);
