@@ -80,6 +80,54 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        // Zone category colors
+        zone: {
+          floor: {
+            DEFAULT: "hsl(var(--zone-floor))",
+            light: "hsl(var(--zone-floor-light))",
+            border: "hsl(var(--zone-floor-border))",
+          },
+          public: {
+            DEFAULT: "hsl(var(--zone-public))",
+            light: "hsl(var(--zone-public-light))",
+            border: "hsl(var(--zone-public-border))",
+          },
+          food: {
+            DEFAULT: "hsl(var(--zone-food))",
+            light: "hsl(var(--zone-food-light))",
+            border: "hsl(var(--zone-food-border))",
+          },
+          service: {
+            DEFAULT: "hsl(var(--zone-service))",
+            light: "hsl(var(--zone-service-light))",
+            border: "hsl(var(--zone-service-border))",
+          },
+          outdoor: {
+            DEFAULT: "hsl(var(--zone-outdoor))",
+            light: "hsl(var(--zone-outdoor-light))",
+            border: "hsl(var(--zone-outdoor-border))",
+          },
+          utility: {
+            DEFAULT: "hsl(var(--zone-utility))",
+            light: "hsl(var(--zone-utility-light))",
+            border: "hsl(var(--zone-utility-border))",
+          },
+        },
+        // Task status colors
+        task: {
+          urgent: "hsl(var(--task-urgent))",
+          high: "hsl(var(--task-high))",
+          pending: "hsl(var(--task-pending))",
+          progress: "hsl(var(--task-progress))",
+          complete: "hsl(var(--task-complete))",
+        },
+        // Worker status colors
+        worker: {
+          available: "hsl(var(--worker-available))",
+          busy: "hsl(var(--worker-busy))",
+          break: "hsl(var(--worker-break))",
+          offline: "hsl(var(--worker-offline))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -107,6 +155,14 @@ export default {
           "0%, 100%": { boxShadow: "0 0 5px hsl(var(--primary) / 0.5)" },
           "50%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.8)" },
         },
+        "glow": {
+          "0%": { boxShadow: "0 0 5px currentColor" },
+          "100%": { boxShadow: "0 0 20px currentColor, 0 0 30px currentColor" },
+        },
+        "pulse-urgent": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.8", transform: "scale(1.05)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +170,8 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "glow": "glow 2s ease-in-out infinite alternate",
+        "pulse-urgent": "pulse-urgent 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },
