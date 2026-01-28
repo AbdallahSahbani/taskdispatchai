@@ -1,14 +1,14 @@
 import { cn } from '@/lib/utils';
 import { ZoneCategory, ZoneStats, WorkerStatus } from './types';
 import { ZONE_CATEGORY_CLASSES } from './zoneConfig';
-import { WorkerAvatarGroup } from './WorkerAvatar';
+import { WorkerMarkerGroup } from './WorkerMarker';
 import { TaskIndicator } from './TaskBadge';
 
 interface ZoneCardProps {
   zoneId: string;
   zoneName: string;
   category: ZoneCategory;
-  workers: Array<{ id: string; name: string; status?: WorkerStatus }>;
+  workers: Array<{ id: string; name: string; status?: WorkerStatus; hasActiveTask?: boolean }>;
   stats: ZoneStats;
   isSelected?: boolean;
   isAssignmentTarget?: boolean;
@@ -55,17 +55,11 @@ export function ZoneCard({
       )}
       
       <div className="absolute inset-0 p-1.5 flex flex-col justify-between">
-        {/* Zone name */}
-        <span className="text-[10px] font-semibold text-white drop-shadow-md truncate leading-tight">
-          {zoneName}
-        </span>
-        
-        {/* Bottom row: Workers and Tasks */}
-        <div className="flex items-center justify-between gap-1 mt-auto">
-          {/* Workers */}
-          {workers.length > 0 && (
-            <WorkerAvatarGroup workers={workers} max={3} size="sm" />
-          )}
+        {/* Header: Zone name and task indicators */}
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[10px] font-semibold text-white drop-shadow-md truncate leading-tight flex-1">
+            {zoneName}
+          </span>
           
           {/* Task indicators */}
           {stats.taskCount > 0 && (
@@ -76,6 +70,17 @@ export function ZoneCard({
             />
           )}
         </div>
+        
+        {/* Workers area - positioned inside zone */}
+        {workers.length > 0 ? (
+          <WorkerMarkerGroup workers={workers} max={4} size="sm" />
+        ) : (
+          stats.taskCount === 0 && (
+            <div className="flex items-center justify-center opacity-30">
+              <span className="text-muted-foreground text-[8px]">No activity</span>
+            </div>
+          )
+        )}
       </div>
     </div>
   );
