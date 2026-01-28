@@ -191,12 +191,20 @@ export default function Zones() {
   const getZoneWorkers = useCallback((zoneId: string) => {
     return displayWorkers
       .filter(w => w.currentZoneId === zoneId && w.onShift)
-      .map(w => ({
-        id: w.id,
-        name: w.name,
-        status: (w.deviceStatus === 'offline' ? 'offline' : 'available') as WorkerStatus,
-      }));
-  }, [displayWorkers]);
+      .map(w => {
+        // Check if worker has an active task
+        const hasActiveTask = tasks.some(
+          t => t.task_assignments?.worker_id === parseInt(w.id) && 
+               (t.status === 'assigned' || t.status === 'in_progress')
+        );
+        return {
+          id: w.id,
+          name: w.name,
+          status: (w.deviceStatus === 'offline' ? 'offline' : hasActiveTask ? 'busy' : 'available') as WorkerStatus,
+          hasActiveTask,
+        };
+      });
+  }, [displayWorkers, tasks]);
 
   // Zone summary data for the grid
   const zoneSummaryData = useMemo(() => {
