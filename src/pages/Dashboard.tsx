@@ -105,7 +105,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-background/95 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
@@ -115,7 +115,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Live Tasks</h2>
+                <h2 className="text-lg font-semibold text-foreground font-display">Live Tasks</h2>
                 <div className="flex items-center gap-2">
                   <Button onClick={handleCreateTask} disabled={creating} size="sm" className="gap-2">
                     <Plus className="w-4 h-4" />
@@ -148,7 +148,7 @@ export default function Dashboard() {
               <ZoneMap zones={displayZones} workers={displayWorkers} tasks={displayTasks} />
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-foreground">Active Workers</h2>
+                  <h2 className="text-lg font-semibold text-foreground font-display">Active Workers</h2>
                   <span className="text-sm text-muted-foreground font-mono">{activeWorkers.length} on shift</span>
                 </div>
                 <div className="space-y-2">

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatchState } from '@/hooks/useDispatchState';
 import { dispatchApi } from '@/lib/api';
 import { initSpeechSynthesis, notifyWorkerOfTask, playNotificationPing } from '@/lib/speechNotification';
 import { StatusBadge } from '@/components/StatusBadge';
-import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX } from 'lucide-react';
+import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -169,18 +170,40 @@ export default function WorkerApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" onClick={handleUserInteraction}>
-      <header className="px-4 py-4 border-b border-border bg-card/50">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95 flex flex-col" onClick={handleUserInteraction}>
+      <header className="px-4 py-4 border-b border-border bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><User className="w-5 h-5 text-primary" /></div>
+          <Link 
+            to="/" 
+            className="p-2 rounded-xl bg-secondary/80 hover:bg-secondary transition-all"
+          >
+            <Home className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+          </Link>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
+            <User className="w-5 h-5 text-primary" />
+          </div>
           <div className="flex-1">
             <Select value={selectedWorkerId?.toString() || ''} onValueChange={(v) => setSelectedWorkerId(Number(v))}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select worker" /></SelectTrigger>
-              <SelectContent>{workers.filter(w => w.on_shift).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.name} ({w.role})</SelectItem>)}</SelectContent>
+              <SelectTrigger className="w-full bg-secondary/50 border-border/50">
+                <SelectValue placeholder="Select worker" />
+              </SelectTrigger>
+              <SelectContent>
+                {workers.filter(w => w.on_shift).map((w) => (
+                  <SelectItem key={w.id} value={w.id.toString()}>{w.name} ({w.role})</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-            {currentWorker && <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1"><MapPin className="w-3 h-3" /><span>{currentZone?.name || 'Unknown'}</span></div>}
+            {currentWorker && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1.5">
+                <MapPin className="w-3 h-3" />
+                <span>{currentZone?.name || 'Unknown'}</span>
+              </div>
+            )}
           </div>
-          <button onClick={toggleAudio} className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+          <button 
+            onClick={toggleAudio} 
+            className="p-2.5 rounded-xl bg-secondary/80 hover:bg-secondary transition-all"
+          >
             {audioEnabled ? <Volume2 className="w-5 h-5 text-primary" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
           </button>
         </div>
@@ -188,11 +211,11 @@ export default function WorkerApp() {
       <main className="flex-1 p-4 space-y-4">
         <div className="flex items-center gap-2">
           <Radio className="w-4 h-4 text-primary animate-pulse" />
-          <h2 className="font-semibold text-foreground">Incoming Tasks</h2>
+          <h2 className="font-semibold text-foreground font-display">Incoming Tasks</h2>
           <span className="text-sm text-muted-foreground">({myTasks.length})</span>
           {audioEnabled && audioInitialized && (
-            <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
-              <Volume2 className="w-3 h-3" /> Audio On
+            <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/50">
+              <Volume2 className="w-3 h-3 text-success" /> Audio On
             </span>
           )}
         </div>

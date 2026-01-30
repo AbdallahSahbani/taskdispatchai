@@ -230,7 +230,7 @@ export default function Zones() {
   const pendingTaskCount = displayTasks.filter(t => t.status !== 'completed').length;
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-background/95 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
@@ -239,7 +239,7 @@ export default function Zones() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Zone Map</h1>
+                <h1 className="text-2xl font-bold text-foreground font-display">Zone Map</h1>
                 <p className="text-muted-foreground mt-1">
                   Real-time employee locations and task distribution
                 </p>
