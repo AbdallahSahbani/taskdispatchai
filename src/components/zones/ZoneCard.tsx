@@ -34,16 +34,16 @@ export function ZoneCard({
   return (
     <div
       className={cn(
-        'absolute rounded-md border-2 transition-all duration-300 cursor-pointer overflow-hidden',
-        'hover:scale-[1.02] hover:z-10 hover:shadow-lg',
+        'absolute rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm',
+        'hover:scale-[1.02] hover:z-10 hover:shadow-xl',
         categoryStyles.gradient,
         stats.hasUrgent 
-          ? 'border-task-urgent animate-pulse-urgent shadow-[0_0_15px_hsl(var(--task-urgent)/0.4)]' 
+          ? 'border-destructive animate-pulse shadow-[0_0_20px_hsl(var(--destructive)/0.35)]' 
           : stats.taskCount > 0 
             ? categoryStyles.border 
-            : 'border-border/30',
+            : 'border-border/40',
         isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
-        isAssignmentTarget && 'ring-4 ring-task-complete ring-opacity-50 shadow-[0_0_20px_hsl(var(--task-complete)/0.4)]',
+        isAssignmentTarget && 'ring-4 ring-success ring-opacity-60 shadow-[0_0_25px_hsl(var(--success)/0.4)]',
         className
       )}
       style={style}
@@ -51,13 +51,13 @@ export function ZoneCard({
     >
       {/* Urgent task pulse overlay */}
       {stats.hasUrgent && (
-        <div className="absolute inset-0 bg-task-urgent/10 animate-pulse" />
+        <div className="absolute inset-0 bg-destructive/10 animate-pulse" />
       )}
       
-      <div className="absolute inset-0 p-1.5 flex flex-col justify-between">
+      <div className="absolute inset-0 p-2 flex flex-col justify-between">
         {/* Header: Zone name and task indicators */}
         <div className="flex items-start justify-between gap-1">
-          <span className="text-[10px] font-semibold text-white drop-shadow-md truncate leading-tight flex-1">
+          <span className="text-[10px] font-semibold text-white/90 drop-shadow-lg truncate leading-tight flex-1 font-display">
             {zoneName}
           </span>
           
@@ -76,8 +76,8 @@ export function ZoneCard({
           <WorkerMarkerGroup workers={workers} max={4} size="sm" />
         ) : (
           stats.taskCount === 0 && (
-            <div className="flex items-center justify-center opacity-30">
-              <span className="text-muted-foreground text-[8px]">No activity</span>
+            <div className="flex items-center justify-center opacity-40">
+              <span className="text-white/60 text-[8px] uppercase tracking-wider">Empty</span>
             </div>
           )
         )}

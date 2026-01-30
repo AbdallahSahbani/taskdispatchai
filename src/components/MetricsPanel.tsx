@@ -20,17 +20,23 @@ function MetricCard({ icon: Icon, label, value, subValue, highlight }: MetricCar
   return (
     <div
       className={cn(
-        'data-panel flex items-center gap-4',
-        highlight && 'border-primary/30'
+        'relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-card/80 p-4 backdrop-blur-sm transition-all hover:border-primary/30',
+        highlight ? 'border-primary/30 shadow-sm' : 'border-border/50'
       )}
     >
-      <div className="p-3 rounded-lg bg-secondary/50">
-        <Icon className="w-5 h-5 text-muted-foreground" />
-      </div>
-      <div>
-        <div className="text-2xl font-semibold font-mono text-foreground">{value}</div>
-        <div className="text-sm text-muted-foreground">{label}</div>
-        {subValue && <div className="text-xs text-muted-foreground mt-0.5">{subValue}</div>}
+      {/* Subtle glow effect */}
+      {highlight && (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+      )}
+      <div className="relative flex items-center gap-4">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/80 to-secondary/50 border border-border/30">
+          <Icon className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <div className="text-2xl font-semibold font-mono text-foreground tracking-tight">{value}</div>
+          <div className="text-sm text-muted-foreground">{label}</div>
+          {subValue && <div className="text-xs text-muted-foreground/80 mt-0.5">{subValue}</div>}
+        </div>
       </div>
     </div>
   );

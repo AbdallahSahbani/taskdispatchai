@@ -122,7 +122,7 @@ export default function Workers() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-background/95 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
@@ -130,7 +130,7 @@ export default function Workers() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Workers</h1>
+                <h1 className="text-2xl font-bold text-foreground font-display">Workers</h1>
                 <p className="text-muted-foreground mt-1">
                   Manage employees and app sync status
                 </p>

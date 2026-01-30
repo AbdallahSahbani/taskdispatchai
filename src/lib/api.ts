@@ -44,6 +44,10 @@ export const dispatchApi = {
   
   syncWorker: (worker_id: number) =>
     callDispatch("sync-worker", "POST", { worker_id }),
+  
+  // WiFi Positioning - Update worker location using RSSI fingerprinting
+  updatePositionFromWifi: (worker_id: number, rssi_measurements: Array<{ bssid: string; rssi: number }>) =>
+    callDispatch("position-update", "POST", { worker_id, measurements: rssi_measurements }),
 };
 
 // Real-time subscriptions

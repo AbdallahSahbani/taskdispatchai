@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,111 +6,111 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 95%;
+    /* Luxury Hotel Palette - Deep Navy & Gold */
+    --background: 222 47% 5%;
+    --foreground: 45 30% 96%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 95%;
+    --card: 222 40% 8%;
+    --card-foreground: 45 30% 96%;
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 222 40% 10%;
+    --popover-foreground: 45 30% 96%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 220 20% 7%;
+    /* Gold primary accent */
+    --primary: 43 74% 49%;
+    --primary-foreground: 222 47% 5%;
 
-    --secondary: 220 16% 16%;
-    --secondary-foreground: 210 20% 85%;
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 45 20% 85%;
 
-    --muted: 220 14% 14%;
-    --muted-foreground: 215 16% 55%;
+    --muted: 222 25% 12%;
+    --muted-foreground: 220 15% 55%;
 
-    --accent: 220 16% 18%;
-    --accent-foreground: 210 20% 95%;
+    --accent: 222 30% 16%;
+    --accent-foreground: 45 30% 96%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 45 30% 98%;
 
-    --border: 220 16% 18%;
-    --input: 220 16% 20%;
-    --ring: 199 89% 48%;
+    --border: 222 25% 15%;
+    --input: 222 25% 18%;
+    --ring: 43 74% 49%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Status Colors */
-    --status-new: 199 89% 48%;
-    --status-assigned: 262 83% 58%;
-    --status-in-progress: 38 92% 50%;
-    --status-completed: 142 71% 45%;
-    --status-urgent: 0 72% 51%;
+    /* Status Colors - Refined palette */
+    --status-new: 210 100% 56%;
+    --status-assigned: 270 70% 60%;
+    --status-in-progress: 43 74% 49%;
+    --status-completed: 158 64% 42%;
+    --status-urgent: 0 84% 60%;
 
     /* Semantic tokens */
-    --success: 142 71% 45%;
-    --success-foreground: 220 20% 7%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 7%;
-    --info: 199 89% 48%;
-    --info-foreground: 220 20% 7%;
+    --success: 158 64% 42%;
+    --success-foreground: 222 47% 5%;
+    --warning: 43 74% 49%;
+    --warning-foreground: 222 47% 5%;
+    --info: 210 100% 56%;
+    --info-foreground: 222 47% 5%;
 
-    /* Zone category colors - Guest Floors (Blue spectrum) */
-    --zone-floor: 212 50% 24%;
-    --zone-floor-light: 211 45% 32%;
-    --zone-floor-border: 210 70% 55%;
+    /* Zone category colors - Luxury palette */
+    --zone-floor: 222 45% 22%;
+    --zone-floor-light: 222 40% 32%;
+    --zone-floor-border: 210 70% 50%;
 
-    /* Zone category colors - Public Areas (Teal/Cyan) */
-    --zone-public: 180 74% 18%;
-    --zone-public-light: 180 80% 28%;
-    --zone-public-border: 173 58% 39%;
+    --zone-public: 173 58% 22%;
+    --zone-public-light: 173 55% 32%;
+    --zone-public-border: 173 58% 45%;
 
-    /* Zone category colors - Food & Beverage (Warm amber) */
-    --zone-food: 33 93% 25%;
-    --zone-food-light: 35 85% 37%;
-    --zone-food-border: 38 92% 50%;
+    --zone-food: 35 75% 28%;
+    --zone-food-light: 38 70% 40%;
+    --zone-food-border: 43 74% 49%;
 
-    /* Zone category colors - Back of House (Purple) */
-    --zone-service: 274 56% 27%;
-    --zone-service-light: 271 76% 53%;
-    --zone-service-border: 263 70% 76%;
+    --zone-service: 280 45% 28%;
+    --zone-service-light: 280 50% 40%;
+    --zone-service-border: 280 60% 60%;
 
-    /* Zone category colors - Outdoor (Green) */
-    --zone-outdoor: 142 72% 21%;
-    --zone-outdoor-light: 142 76% 36%;
-    --zone-outdoor-border: 142 69% 58%;
+    --zone-outdoor: 158 55% 22%;
+    --zone-outdoor-light: 158 50% 32%;
+    --zone-outdoor-border: 158 64% 42%;
 
-    /* Zone category colors - Utility (Slate gray) */
-    --zone-utility: 215 25% 27%;
-    --zone-utility-light: 215 19% 46%;
-    --zone-utility-border: 215 16% 65%;
+    --zone-utility: 222 20% 28%;
+    --zone-utility-light: 222 15% 40%;
+    --zone-utility-border: 222 15% 55%;
 
     /* Task status colors */
     --task-urgent: 0 84% 60%;
-    --task-high: 21 90% 48%;
-    --task-pending: 38 92% 50%;
-    --task-progress: 217 91% 60%;
-    --task-complete: 142 76% 36%;
+    --task-high: 25 95% 53%;
+    --task-pending: 43 74% 49%;
+    --task-progress: 210 100% 56%;
+    --task-complete: 158 64% 42%;
 
     /* Worker status colors */
-    --worker-available: 142 76% 36%;
-    --worker-busy: 38 92% 50%;
-    --worker-break: 215 16% 47%;
-    --worker-offline: 215 28% 17%;
+    --worker-available: 158 64% 42%;
+    --worker-busy: 43 74% 49%;
+    --worker-break: 222 15% 50%;
+    --worker-offline: 222 25% 20%;
 
     /* Glow effects */
-    --glow-primary: 0 0 20px hsl(199 89% 48% / 0.3);
-    --glow-success: 0 0 20px hsl(142 71% 45% / 0.3);
-    --glow-warning: 0 0 20px hsl(38 92% 50% / 0.3);
-    --glow-urgent: 0 0 20px hsl(0 72% 51% / 0.4);
+    --glow-primary: 0 0 30px hsl(43 74% 49% / 0.25);
+    --glow-success: 0 0 25px hsl(158 64% 42% / 0.25);
+    --glow-warning: 0 0 25px hsl(43 74% 49% / 0.3);
+    --glow-urgent: 0 0 30px hsl(0 84% 60% / 0.35);
 
-    --sidebar-background: 220 18% 8%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 16% 14%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 220 16% 16%;
-    --sidebar-ring: 199 89% 48%;
+    /* Sidebar */
+    --sidebar-background: 222 45% 6%;
+    --sidebar-foreground: 45 20% 85%;
+    --sidebar-primary: 43 74% 49%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 45 30% 96%;
+    --sidebar-border: 222 25% 14%;
+    --sidebar-ring: 43 74% 49%;
 
+    /* Typography */
     --font-mono: 'JetBrains Mono', monospace;
     --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Playfair Display', serif;
   }
 }
 
@@ -126,6 +126,10 @@
 
   .font-mono {
     font-family: var(--font-mono);
+  }
+  
+  .font-display {
+    font-family: var(--font-display);
   }
 }
 
