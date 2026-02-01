@@ -34,9 +34,9 @@ export const tasks: Task[] = [
 ];
 
 export const assignments: Assignment[] = [
-  { id: 'a1', taskId: 't2', workerId: 'w4', assignedAt: new Date(Date.now() - 280000), acknowledgedAt: new Date(Date.now() - 260000), state: 'acked' },
-  { id: 'a2', taskId: 't3', workerId: 'w2', assignedAt: new Date(Date.now() - 580000), acknowledgedAt: new Date(Date.now() - 560000), state: 'acked' },
-  { id: 'a3', taskId: 't7', workerId: 'w1', assignedAt: new Date(Date.now() - 200000), state: 'pending' },
+  { id: 'a1', taskId: 't2', workerId: 'w4', assignedAt: new Date(Date.now() - 280000), acknowledgedAt: new Date(Date.now() - 260000), state: 'acked', reroutes: 0 },
+  { id: 'a2', taskId: 't3', workerId: 'w2', assignedAt: new Date(Date.now() - 580000), acknowledgedAt: new Date(Date.now() - 560000), state: 'acked', reroutes: 0 },
+  { id: 'a3', taskId: 't7', workerId: 'w1', assignedAt: new Date(Date.now() - 200000), state: 'pending_ack', reroutes: 0 },
 ];
 
 export const metrics: MetricsSummary = {
@@ -46,6 +46,7 @@ export const metrics: MetricsSummary = {
   completedTasks: 38,
   reroutes: 3,
   activeWorkers: 5,
+  pendingTasks: 9,
 };
 
 export const getZoneById = (id: string): Zone | undefined => zones.find(z => z.id === id);

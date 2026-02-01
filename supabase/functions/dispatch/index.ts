@@ -16,6 +16,7 @@ interface WorkerWithState {
     zone_confidence: number;
     device_online: boolean;
     active_task_count: number;
+    last_heartbeat_at: string | null;
   } | null;
 }
 
@@ -69,7 +70,134 @@ function shortestPath(
   return dist.get(to) ?? 999;
 }
 
-// Calculate dispatch score (lower is better)
+/**
+ * Enhanced Dispatch Scoring Algorithm
+ * Based on PDF spec: S(w,t) = λ₁P + λ₂R + λ₃L + λ₄D + λ₅M
+ * 
+ * Higher score = better candidate (0-100 scale)
+ */
+
+interface DispatchWeights {
+  proximity: number;
+  reliability: number;
+  load: number;
+  device: number;
+  skill: number;
+}
+
+const PRIORITY_WEIGHTS: Record<string, DispatchWeights> = {
+  low: { proximity: 0.25, reliability: 0.20, load: 0.35, device: 0.10, skill: 0.10 },
+  normal: { proximity: 0.35, reliability: 0.20, load: 0.20, device: 0.10, skill: 0.15 },
+  high: { proximity: 0.45, reliability: 0.15, load: 0.10, device: 0.10, skill: 0.20 },
+  urgent: { proximity: 0.55, reliability: 0.10, load: 0.05, device: 0.10, skill: 0.20 },
+};
+
+function calculateProximityScore(currentZone: string | null, taskZone: string, travelTime: number): number {
+  if (!currentZone) return 0;
+  if (currentZone === taskZone) return 100;
+  if (travelTime <= 60) return Math.round(100 - (travelTime / 6));
+  return Math.max(0, Math.round(100 - (travelTime / 3)));
+}
+
+function calculateLoadScore(activeTaskCount: number): number {
+  switch (activeTaskCount) {
+    case 0: return 100;
+    case 1: return 75;
+    case 2: return 50;
+    case 3: return 25;
+    default: return 0;
+  }
+}
+
+function calculateDeviceScore(lastHeartbeat: string | null, deviceOnline: boolean): number {
+  if (!deviceOnline) return 0;
+  if (!lastHeartbeat) return 20;
+  
+  const secondsAgo = (Date.now() - new Date(lastHeartbeat).getTime()) / 1000;
+  if (secondsAgo <= 30) return 100;
+  if (secondsAgo <= 60) return 80;
+  if (secondsAgo <= 300) return 50;
+  return 20;
+}
+
+function calculateSkillScore(taskType: string, workerRole: string): number {
+  // Role-based skill matching
+  if (taskType === 'maintenance' && workerRole === 'maintenance') return 100;
+  if (['towels', 'cleaning', 'trash'].includes(taskType) && workerRole === 'housekeeping') return 100;
+  if (taskType === 'room_service' && workerRole === 'room_service') return 100;
+  if (workerRole === 'housekeeping') return 80; // Housekeeping can do most tasks
+  return 50;
+}
+
+interface ScoreBreakdown {
+  workerId: number;
+  name: string;
+  totalScore: number;
+  proximityScore: number;
+  reliabilityScore: number;
+  loadScore: number;
+  deviceScore: number;
+  skillScore: number;
+  travelTime: number;
+  zone: string | null;
+  confidence: number;
+}
+
+function dispatchScoreEnhanced(
+  worker: WorkerWithState,
+  taskZone: string,
+  taskType: string,
+  priority: string,
+  travelTime: number
+): ScoreBreakdown {
+  const state = worker.worker_state;
+  const weights = PRIORITY_WEIGHTS[priority] || PRIORITY_WEIGHTS.normal;
+  
+  if (!state || !state.device_online) {
+    return {
+      workerId: worker.id,
+      name: worker.name,
+      totalScore: 0,
+      proximityScore: 0,
+      reliabilityScore: 0,
+      loadScore: 0,
+      deviceScore: 0,
+      skillScore: 0,
+      travelTime,
+      zone: state?.current_zone || null,
+      confidence: 0,
+    };
+  }
+
+  const proximityScore = calculateProximityScore(state.current_zone, taskZone, travelTime);
+  const reliabilityScore = Math.round(worker.reliability_score * 100);
+  const loadScore = calculateLoadScore(state.active_task_count);
+  const deviceScore = calculateDeviceScore(state.last_heartbeat_at, state.device_online);
+  const skillScore = calculateSkillScore(taskType, worker.role);
+
+  const totalScore = 
+    weights.proximity * proximityScore +
+    weights.reliability * reliabilityScore +
+    weights.load * loadScore +
+    weights.device * deviceScore +
+    weights.skill * skillScore;
+
+  return {
+    workerId: worker.id,
+    name: worker.name,
+    totalScore: Math.round(totalScore * 100) / 100,
+    proximityScore,
+    reliabilityScore,
+    loadScore,
+    deviceScore,
+    skillScore,
+    travelTime,
+    zone: state.current_zone,
+    confidence: state.zone_confidence,
+  };
+}
+
+// Legacy scoring function (lower is better) - kept for backward compatibility
 function dispatchScore(
   worker: WorkerWithState,
   taskZone: string,
@@ -616,6 +744,148 @@ Deno.serve(async (req) => {
       );
     }
 
+    // POST /dispatch/position-update - Update worker position from RSSI measurements
+    if (req.method === "POST" && path === "position-update") {
+      const body = await req.json();
+      const { worker_id, measurements } = body;
+
+      if (!worker_id || !measurements || !Array.isArray(measurements)) {
+        return new Response(
+          JSON.stringify({ error: "worker_id and measurements array required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Sort by signal strength (highest RSSI = strongest signal)
+      const sortedMeasurements = [...measurements]
+        .filter((m: any) => m.rssi > -90)
+        .sort((a: any, b: any) => b.rssi - a.rssi);
+
+      if (sortedMeasurements.length === 0) {
+        return new Response(
+          JSON.stringify({ updated: false, reason: "no valid measurements" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get strongest AP
+      const strongestAp = sortedMeasurements[0];
+
+      // Look up zone for AP
+      const { data: apMapping } = await supabase
+        .from("wifi_ap_zones")
+        .select("zone_id")
+        .eq("ap_id", strongestAp.bssid)
+        .single();
+
+      if (!apMapping) {
+        // Try WKNN approach - average all known APs
+        const bssids = sortedMeasurements.slice(0, 4).map((m: any) => m.bssid);
+        const { data: knownAps } = await supabase
+          .from("wifi_ap_zones")
+          .select("zone_id")
+          .in("ap_id", bssids);
+
+        if (!knownAps || knownAps.length === 0) {
+          return new Response(
+            JSON.stringify({ updated: false, reason: "unknown APs" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Count zone occurrences for simple voting
+        const zoneCounts: Record<string, number> = {};
+        for (const ap of knownAps) {
+          if (ap.zone_id) {
+            zoneCounts[ap.zone_id] = (zoneCounts[ap.zone_id] || 0) + 1;
+          }
+        }
+
+        const bestZone = Object.entries(zoneCounts)
+          .sort(([, a], [, b]) => b - a)[0]?.[0];
+
+        if (!bestZone) {
+          return new Response(
+            JSON.stringify({ updated: false, reason: "no zone match" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Calculate confidence based on agreement
+        const confidence = Math.min(0.95, 0.5 + (zoneCounts[bestZone] / knownAps.length) * 0.45);
+
+        await supabase
+          .from("worker_state")
+          .update({
+            current_zone: bestZone,
+            zone_confidence: confidence,
+            zone_source: "wifi_wknn",
+            zone_last_updated_at: new Date().toISOString(),
+            device_online: true,
+            last_heartbeat_at: new Date().toISOString(),
+          })
+          .eq("worker_id", worker_id);
+
+        return new Response(
+          JSON.stringify({ updated: true, zone: bestZone, confidence, method: "wknn" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Single strong AP match - calculate confidence based on RSSI
+      const confidence = strongestAp.rssi > -50 ? 0.95 :
+                        strongestAp.rssi > -65 ? 0.85 :
+                        strongestAp.rssi > -75 ? 0.70 : 0.50;
+
+      // Get current state to check for task truth
+      const { data: state } = await supabase
+        .from("worker_state")
+        .select("*")
+        .eq("worker_id", worker_id)
+        .single();
+
+      // Don't override task truth within 60 seconds
+      if (state) {
+        const lastUpdate = new Date(state.zone_last_updated_at).getTime();
+        const now = Date.now();
+        if (state.zone_source === "task" && now - lastUpdate < 60000) {
+          return new Response(
+            JSON.stringify({ updated: false, reason: "task truth holds" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      await supabase
+        .from("worker_state")
+        .update({
+          current_zone: apMapping.zone_id,
+          zone_confidence: confidence,
+          zone_source: "wifi_rssi",
+          zone_last_updated_at: new Date().toISOString(),
+          device_online: true,
+          last_heartbeat_at: new Date().toISOString(),
+        })
+        .eq("worker_id", worker_id);
+
+      await supabase.from("dispatch_events").insert({
+        event_type: "worker_zone_update",
+        worker_id,
+        zone_id: apMapping.zone_id,
+        payload: { 
+          source: "wifi_rssi", 
+          bssid: strongestAp.bssid,
+          rssi: strongestAp.rssi,
+          confidence,
+        },
+      });
+
+      return new Response(
+        JSON.stringify({ updated: true, zone: apMapping.zone_id, confidence, method: "rssi" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Not found" }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -630,7 +900,7 @@ Deno.serve(async (req) => {
   }
 });
 
-// Route task to best worker
+// Route task to best worker using enhanced scoring
 async function routeTask(supabase: any, task: any) {
   // Get zone graph
   const { data: edges } = await supabase.from("zone_edges").select("*");
@@ -651,33 +921,26 @@ async function routeTask(supabase: any, task: any) {
     .eq("on_shift", true)
     .eq("role", roleFilter);
 
-  const candidates: Array<{
-    worker_id: number;
-    name: string;
-    score: number;
-    zone: string | null;
-    confidence: number;
-    travel_time: number;
-  }> = [];
+  const candidates: ScoreBreakdown[] = [];
 
   for (const worker of workers ?? []) {
     const state = worker.worker_state;
     if (!state?.device_online) continue;
 
     const travelTime = shortestPath(graph, state.current_zone, task.zone_id);
-    const score = dispatchScore(worker, task.zone_id, travelTime);
+    const scoreBreakdown = dispatchScoreEnhanced(
+      worker, 
+      task.zone_id, 
+      task.type, 
+      task.priority, 
+      travelTime
+    );
 
-    candidates.push({
-      worker_id: worker.id,
-      name: worker.name,
-      score,
-      zone: state.current_zone,
-      confidence: state.zone_confidence,
-      travel_time: travelTime,
-    });
+    candidates.push(scoreBreakdown);
   }
 
-  candidates.sort((a, b) => a.score - b.score);
+  // Sort by total score descending (higher is better in new system)
+  candidates.sort((a, b) => b.totalScore - a.totalScore);
 
   if (candidates.length === 0) {
     await supabase.from("dispatch_events").insert({
@@ -694,7 +957,7 @@ async function routeTask(supabase: any, task: any) {
   // Create assignment
   await supabase.from("task_assignments").insert({
     task_id: task.id,
-    worker_id: best.worker_id,
+    worker_id: best.workerId,
     state: "pending_ack",
   });
 
@@ -705,7 +968,7 @@ async function routeTask(supabase: any, task: any) {
   const { data: currentState } = await supabase
     .from("worker_state")
     .select("active_task_count")
-    .eq("worker_id", best.worker_id)
+    .eq("worker_id", best.workerId)
     .single();
 
   await supabase
@@ -713,17 +976,27 @@ async function routeTask(supabase: any, task: any) {
     .update({
       active_task_count: (currentState?.active_task_count ?? 0) + 1,
     })
-    .eq("worker_id", best.worker_id);
+    .eq("worker_id", best.workerId);
 
   await supabase.from("dispatch_events").insert({
     event_type: "task_assigned",
     task_id: task.id,
-    worker_id: best.worker_id,
+    worker_id: best.workerId,
     zone_id: task.zone_id,
-    payload: { score: best.score, candidates: candidates.length },
+    payload: { 
+      score: best.totalScore, 
+      candidates: candidates.length,
+      breakdown: {
+        proximity: best.proximityScore,
+        reliability: best.reliabilityScore,
+        load: best.loadScore,
+        device: best.deviceScore,
+        skill: best.skillScore,
+      }
+    },
   });
 
-  console.log(`Task ${task.id} assigned to ${best.name} (score: ${best.score.toFixed(1)})`);
+  console.log(`Task ${task.id} assigned to ${best.name} (score: ${best.totalScore.toFixed(1)})`);
 
   return {
     assigned: true,

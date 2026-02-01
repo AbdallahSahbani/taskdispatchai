@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Workers from "./pages/Workers";
 import Zones from "./pages/Zones";
 import WorkerApp from "./pages/WorkerApp";
+import Pitch from "./pages/Pitch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/tasks" element={<Index />} />
           <Route path="/workers" element={<Workers />} />
           <Route path="/zones" element={<Zones />} />
+          <Route path="/pitch" element={<Pitch />} />
           <Route path="/analytics" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

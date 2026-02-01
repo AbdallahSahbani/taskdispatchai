@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Users, MapPin, BarChart3, Smartphone, Home, Wifi } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Smartphone, Home, Wifi, Presentation, CheckCircle2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -11,6 +11,7 @@ const navItems = [
   { icon: MapPin, label: 'Zone Map', path: '/zones' },
   { icon: Users, label: 'Workers', path: '/workers' },
   { icon: Smartphone, label: 'Worker App', path: '/worker-app' },
+  { icon: Presentation, label: 'Pitch', path: '/pitch' },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
@@ -67,14 +68,20 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border">
+        <div className="hidden lg:flex items-center gap-2 px-2 mb-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-success/10 border border-success/20">
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+            <span className="text-[11px] text-success font-medium">System Online</span>
+          </div>
+        </div>
         <div className="hidden lg:flex items-center gap-2 px-2">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/50">
-            <Wifi className="w-3.5 h-3.5 text-success" />
+            <Wifi className="w-3.5 h-3.5 text-info" />
             <span className="text-[11px] text-muted-foreground">WiFi Positioning Active</span>
           </div>
         </div>
         <div className="hidden lg:block text-[10px] text-sidebar-foreground/50 mt-3 px-2">
-          <p className="font-display">Dispatch v2.0</p>
+          <p className="font-display">Dispatch v4.0</p>
           <p className="mt-0.5">© 2026 Grand Hotel</p>
         </div>
       </div>
