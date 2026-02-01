@@ -60,6 +60,8 @@ export default function Dashboard() {
     assigned: displayTasks.filter((t) => t.status === 'assigned').length,
     in_progress: displayTasks.filter((t) => t.status === 'in_progress').length,
     completed: displayTasks.filter((t) => t.status === 'completed').length,
+    cancelled: displayTasks.filter((t) => t.status === 'cancelled').length,
+    rerouted: displayTasks.filter((t) => t.status === 'rerouted').length,
   }), [displayTasks]);
 
   const activeWorkers = displayWorkers.filter((w) => w.onShift);

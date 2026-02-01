@@ -12,6 +12,8 @@ const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
   assigned: { label: 'Assigned', className: 'status-assigned' },
   in_progress: { label: 'In Progress', className: 'status-in-progress' },
   completed: { label: 'Done', className: 'status-completed' },
+  cancelled: { label: 'Cancelled', className: 'status-completed' },
+  rerouted: { label: 'Rerouted', className: 'status-urgent' },
 };
 
 export function StatusBadge({ status, priority, className }: StatusBadgeProps) {
