@@ -1,382 +1,265 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { useDispatchState } from '@/hooks/useDispatchState';
-import { Worker, Zone, Task } from '@/types/dispatch';
+import { useSimulationStore } from '@/stores/simulationStore';
+import { ProfessionalZoneMap } from '@/components/zones/ProfessionalZoneMap';
+import { SimulationControls } from '@/components/zones/SimulationControls';
+import { WorkerProfileModal } from '@/components/workers/WorkerProfileModal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Users, AlertTriangle, Play, Pause } from 'lucide-react';
+import { 
+  Users, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock,
+  MapPin,
+  Activity,
+  Layers
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-
-// Import zone components
-import { ZoneCard } from '@/components/zones/ZoneCard';
-import { ZoneSummaryGrid } from '@/components/zones/ZoneSummaryGrid';
-import { ZoneMapLegend } from '@/components/zones/ZoneMapLegend';
-import { WorkerPin } from '@/components/zones/WorkerPin';
-import { ZONE_LAYOUTS, ZONE_CATEGORY_MAP, generateColorFromId } from '@/components/zones/zoneConfig';
-import type { ZoneStats, WorkerStatus, ZoneCategory } from '@/components/zones/types';
-
-interface WorkerPinData {
-  id: string;
-  name: string;
-  initials: string;
-  zoneId: string;
-  x: number;
-  y: number;
-  status: WorkerStatus;
-  isMoving: boolean;
-}
+import type { SimulatedWorker } from '@/stores/simulationStore';
 
 export default function Zones() {
-  const { workers, tasks, zones, loading, refetch } = useDispatchState();
-  const [simulationRunning, setSimulationRunning] = useState(false);
-  const [workerPositions, setWorkerPositions] = useState<Record<string, string>>({});
-  const [movingWorkers, setMovingWorkers] = useState<Set<string>>(new Set());
-  const [lastAssignment, setLastAssignment] = useState<{ taskId: string; workerId: string; zoneId: string } | null>(null);
+  const { zones, workers, tasks, metrics, isRunning, tick } = useSimulationStore();
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
-  // Map DB zones to display zones
-  const displayZones: Zone[] = useMemo(() => zones.map((z) => ({
-    id: z.id,
-    name: z.name,
-    neighbors: ZONE_LAYOUTS[z.id]?.neighbors || [],
-    travelTimeToNeighbor: {},
-  })), [zones]);
-
-  // Map DB tasks to display tasks
-  const displayTasks: Task[] = useMemo(() => tasks.map((t) => ({
-    id: String(t.id),
-    type: t.type as Task['type'],
-    source: `${t.type} request`,
-    description: `${t.type} at ${zones.find(z => z.id === t.zone_id)?.name || t.zone_id}`,
-    zoneId: t.zone_id,
-    priority: t.priority as Task['priority'],
-    status: t.status as Task['status'],
-    createdAt: new Date(t.created_at),
-  })), [tasks, zones]);
-
-  // Map DB workers to display workers
-  const displayWorkers: Worker[] = useMemo(() => workers.map((w) => ({
-    id: String(w.id),
-    name: w.name,
-    role: w.role as Worker['role'],
-    onShift: w.on_shift,
-    currentZoneId: workerPositions[String(w.id)] || w.worker_state?.current_zone || 'lobby',
-    deviceStatus: (w.worker_state?.device_online ? 'online' : 'offline') as Worker['deviceStatus'],
-    reliabilityScore: w.reliability_score,
-  })), [workers, workerPositions]);
-
-  // Initialize worker positions from DB
+  // Animation loop for simulation
   useEffect(() => {
-    const initialPositions: Record<string, string> = {};
-    workers.forEach((w) => {
-      const zoneId = w.worker_state?.current_zone || 'lobby';
-      initialPositions[String(w.id)] = zoneId;
-    });
-    setWorkerPositions(initialPositions);
-  }, [workers]);
-
-  // Move worker to neighboring zone
-  const moveWorker = useCallback((workerId: string) => {
-    setWorkerPositions((prev) => {
-      const currentZone = prev[workerId] || 'lobby';
-      const neighbors = ZONE_LAYOUTS[currentZone]?.neighbors || ['lobby'];
-      const validNeighbors = neighbors.filter(n => ZONE_LAYOUTS[n]);
-      if (validNeighbors.length === 0) return prev;
-      
-      const newZone = validNeighbors[Math.floor(Math.random() * validNeighbors.length)];
-      return { ...prev, [workerId]: newZone };
-    });
-  }, []);
-
-  // Simulation loop - moves random workers every 2 seconds
-  useEffect(() => {
-    if (!simulationRunning) return;
+    if (!isRunning) return;
     
     const interval = setInterval(() => {
-      const activeWorkers = displayWorkers.filter(w => w.onShift);
-      if (activeWorkers.length === 0) return;
-      
-      const randomWorker = activeWorkers[Math.floor(Math.random() * activeWorkers.length)];
-      
-      setMovingWorkers((prev) => new Set([...prev, randomWorker.id]));
-      
-      setTimeout(() => {
-        moveWorker(randomWorker.id);
-        setMovingWorkers((prev) => {
-          const next = new Set(prev);
-          next.delete(randomWorker.id);
-          return next;
-        });
-      }, 500);
-    }, 2000);
+      tick();
+    }, 50); // 20fps for smooth animation
     
     return () => clearInterval(interval);
-  }, [simulationRunning, displayWorkers, moveWorker]);
+  }, [isRunning, tick]);
 
-  // Track task assignments for visual feedback
-  useEffect(() => {
-    const assignedTask = tasks.find(t => t.status === 'assigned' && t.task_assignments);
-    if (assignedTask && assignedTask.task_assignments) {
-      setLastAssignment({
-        taskId: String(assignedTask.id),
-        workerId: String(assignedTask.task_assignments.worker_id),
-        zoneId: assignedTask.zone_id,
-      });
-      
-      setTimeout(() => setLastAssignment(null), 5000);
-    }
-  }, [tasks]);
+  const selectedWorker = workers.find(w => w.id === selectedWorkerId) || null;
 
-  // Get zone statistics
-  const getZoneStats = useCallback((zoneId: string): ZoneStats => {
-    const zoneWorkers = displayWorkers.filter(w => w.currentZoneId === zoneId && w.onShift);
-    const zoneTasks = displayTasks.filter(t => t.zoneId === zoneId && t.status !== 'completed');
+  // Zone statistics
+  const zoneStats = zones.map(zone => {
+    const zoneWorkers = workers.filter(w => w.position.zoneId === zone.id);
+    const zoneTasks = tasks.filter(t => t.zoneId === zone.id && t.status !== 'completed');
     const urgentTasks = zoneTasks.filter(t => t.priority === 'urgent');
-    const hasUrgent = urgentTasks.length > 0;
     
-    return { 
-      workerCount: zoneWorkers.length, 
-      taskCount: zoneTasks.length, 
+    return {
+      ...zone,
+      workerCount: zoneWorkers.length,
+      taskCount: zoneTasks.length,
       urgentCount: urgentTasks.length,
-      hasUrgent,
-      status: hasUrgent ? 'urgent' : zoneTasks.length > 0 ? 'pending' : 'clear'
     };
-  }, [displayWorkers, displayTasks]);
+  });
 
-  // Generate worker pins with positions
-  const workerPins: WorkerPinData[] = useMemo(() => {
-    const pinsByZone: Record<string, Worker[]> = {};
-    
-    displayWorkers.filter(w => w.onShift).forEach((worker) => {
-      const zoneId = worker.currentZoneId;
-      if (!pinsByZone[zoneId]) pinsByZone[zoneId] = [];
-      pinsByZone[zoneId].push(worker);
-    });
-    
-    const pins: WorkerPinData[] = [];
-    
-    Object.entries(pinsByZone).forEach(([zoneId, zoneWorkers]) => {
-      const layout = ZONE_LAYOUTS[zoneId];
-      if (!layout) return;
-      
-      zoneWorkers.forEach((worker, idx) => {
-        // Distribute workers within the zone
-        const offsetX = (idx % 3) * 4 + 2;
-        const offsetY = Math.floor(idx / 3) * 4 + 3;
-        
-        // Determine worker status
-        const hasActiveTask = displayTasks.some(
-          t => t.status === 'assigned' && tasks.find(
-            dt => String(dt.id) === t.id && dt.task_assignments?.worker_id === parseInt(worker.id)
-          )
-        );
-        
-        pins.push({
-          id: worker.id,
-          name: worker.name,
-          initials: worker.name.split(' ').map(n => n[0]).join('').toUpperCase(),
-          zoneId,
-          x: layout.x + offsetX,
-          y: layout.y + offsetY,
-          status: worker.deviceStatus === 'offline' ? 'offline' : hasActiveTask ? 'busy' : 'available',
-          isMoving: movingWorkers.has(worker.id),
-        });
-      });
-    });
-    
-    return pins;
-  }, [displayWorkers, movingWorkers, displayTasks, tasks]);
-
-  // Get workers for a specific zone
-  const getZoneWorkers = useCallback((zoneId: string) => {
-    return displayWorkers
-      .filter(w => w.currentZoneId === zoneId && w.onShift)
-      .map(w => {
-        // Check if worker has an active task
-        const hasActiveTask = tasks.some(
-          t => t.task_assignments?.worker_id === parseInt(w.id) && 
-               (t.status === 'assigned' || t.status === 'in_progress')
-        );
-        return {
-          id: w.id,
-          name: w.name,
-          status: (w.deviceStatus === 'offline' ? 'offline' : hasActiveTask ? 'busy' : 'available') as WorkerStatus,
-          hasActiveTask,
-        };
-      });
-  }, [displayWorkers, tasks]);
-
-  // Zone summary data for the grid
-  const zoneSummaryData = useMemo(() => {
-    return displayZones
-      .filter(z => ZONE_LAYOUTS[z.id])
-      .map(zone => ({
-        id: zone.id,
-        name: zone.name,
-        category: ZONE_CATEGORY_MAP[zone.id] || 'utility' as ZoneCategory,
-        stats: getZoneStats(zone.id),
-      }));
-  }, [displayZones, getZoneStats]);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen bg-background items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const activeWorkerCount = displayWorkers.filter(w => w.onShift).length;
-  const pendingTaskCount = displayTasks.filter(t => t.status !== 'completed').length;
+  // Category summary
+  const categorySummary = [
+    { id: 'guest_floor', label: 'Guest Floors', icon: Layers, color: 'text-slate-300' },
+    { id: 'public', label: 'Public Areas', icon: MapPin, color: 'text-zinc-200' },
+    { id: 'f_and_b', label: 'F&B', icon: Activity, color: 'text-amber-300' },
+    { id: 'service', label: 'Service', icon: Users, color: 'text-neutral-300' },
+    { id: 'outdoor', label: 'Outdoor', icon: MapPin, color: 'text-cyan-300' },
+  ].map(cat => ({
+    ...cat,
+    zones: zoneStats.filter(z => z.category === cat.id).length,
+    workers: workers.filter(w => zones.find(z => z.id === w.position.zoneId)?.category === cat.id).length,
+    tasks: tasks.filter(t => zones.find(z => z.id === t.zoneId)?.category === cat.id && t.status !== 'completed').length,
+  }));
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background via-background to-background/95 overflow-hidden">
+    <div className="flex h-screen bg-slate-950 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+        <main className="flex-1 overflow-auto p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+          <div className="space-y-6 max-w-[1800px] mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground font-display">Zone Map</h1>
-                <p className="text-muted-foreground mt-1">
+                <h1 className="text-2xl font-bold text-slate-100 font-display">Zone Map</h1>
+                <p className="text-sm text-slate-500 mt-1">
                   Real-time employee locations and task distribution
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {activeWorkerCount} active
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <AlertTriangle className="w-4 h-4" />
-                    {pendingTaskCount} tasks
-                  </span>
+              <SimulationControls />
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <Card className="bg-slate-900/50 border-slate-800">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-100">{workers.length}</p>
+                    <p className="text-xs text-slate-500">Active Workers</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-900/50 border-slate-800">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-100">{metrics.activeTasks}</p>
+                    <p className="text-xs text-slate-500">Active Tasks</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-900/50 border-slate-800">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-100">{metrics.completedTasks}</p>
+                    <p className="text-xs text-slate-500">Completed Today</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-900/50 border-slate-800">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-100">
+                      {metrics.avgResponseTime > 0 ? `${metrics.avgResponseTime}s` : '--'}
+                    </p>
+                    <p className="text-xs text-slate-500">Avg Response</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Map */}
+            <Card className="bg-slate-900/30 border-slate-800 overflow-hidden">
+              <CardHeader className="pb-2 border-b border-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Hotel Floor Plan
+                  </CardTitle>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-slate-600" />
+                      Guest Floors
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-amber-600/70" />
+                      F&B
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-cyan-600/70" />
+                      Outdoor
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-neutral-600" />
+                      Service
+                    </span>
+                  </div>
                 </div>
-                <Button
-                  variant={simulationRunning ? 'destructive' : 'default'}
-                  onClick={() => {
-                    setSimulationRunning(!simulationRunning);
-                    toast.success(simulationRunning ? 'Simulation paused' : 'Simulation started');
-                  }}
-                  className="gap-2"
+              </CardHeader>
+              <CardContent className="p-4">
+                <ProfessionalZoneMap
+                  className="min-h-[500px]"
+                  onWorkerClick={(id) => setSelectedWorkerId(id)}
+                  onZoneClick={(id) => setSelectedZoneId(id)}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Category Summary */}
+            <div className="grid grid-cols-5 gap-4">
+              {categorySummary.map((cat) => (
+                <Card 
+                  key={cat.id}
+                  className="bg-slate-900/30 border-slate-800 hover:bg-slate-800/30 transition-colors cursor-pointer"
                 >
-                  {simulationRunning ? (
-                    <>
-                      <Pause className="w-4 h-4" />
-                      Pause Simulation
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4" />
-                      Start Simulation
-                    </>
-                  )}
-                </Button>
-              </div>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <cat.icon className={cn('w-4 h-4', cat.color)} />
+                      <span className="text-xs font-medium text-slate-400">{cat.label}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">{cat.zones} zones</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-slate-800 text-slate-300 text-[10px] px-1.5">
+                          {cat.workers} <Users className="w-2.5 h-2.5 ml-0.5 inline" />
+                        </Badge>
+                        {cat.tasks > 0 && (
+                          <Badge variant="secondary" className="bg-amber-900/50 text-amber-300 text-[10px] px-1.5">
+                            {cat.tasks} <AlertTriangle className="w-2.5 h-2.5 ml-0.5 inline" />
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
-            {/* Legend */}
-            <ZoneMapLegend showAssignmentIndicator={!!lastAssignment} />
-
-            {/* Interactive Map */}
-            <div className="data-panel p-4">
-              <div className="relative w-full aspect-[2/1] bg-secondary/20 rounded-lg overflow-hidden border border-border/50">
-                {/* Grid background */}
-                <div className="absolute inset-0 opacity-10" style={{
-                  backgroundImage: 'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
-                  backgroundSize: '5% 10%'
-                }} />
-                
-                {/* Zone Cards */}
-                {displayZones.map((zone) => {
-                  const layout = ZONE_LAYOUTS[zone.id];
-                  if (!layout) return null;
-                  
-                  const stats = getZoneStats(zone.id);
-                  const category = ZONE_CATEGORY_MAP[zone.id] || 'utility';
-                  const isAssignmentTarget = lastAssignment?.zoneId === zone.id;
-                  const zoneWorkers = getZoneWorkers(zone.id);
-
-                  return (
-                    <ZoneCard
-                      key={zone.id}
-                      zoneId={zone.id}
-                      zoneName={zone.name}
-                      category={category as ZoneCategory}
-                      workers={zoneWorkers}
-                      stats={stats}
-                      isAssignmentTarget={isAssignmentTarget}
-                      style={{
-                        left: `${layout.x}%`,
-                        top: `${layout.y}%`,
-                        width: `${layout.width}%`,
-                        height: `${layout.height}%`,
-                      }}
-                    />
-                  );
-                })}
-
-                {/* Worker Pins */}
-                {workerPins.map((pin) => (
-                  <WorkerPin
-                    key={pin.id}
-                    id={pin.id}
-                    name={pin.name}
-                    initials={pin.initials}
-                    x={pin.x}
-                    y={pin.y}
-                    status={pin.status}
-                    isMoving={pin.isMoving}
-                    isAssigned={lastAssignment?.workerId === pin.id}
-                  />
-                ))}
-
-                {/* Assignment line visualization */}
-                {lastAssignment && (() => {
-                  const workerPin = workerPins.find(p => p.id === lastAssignment.workerId);
-                  const targetLayout = ZONE_LAYOUTS[lastAssignment.zoneId];
-                  if (!workerPin || !targetLayout) return null;
-                  
-                  const targetX = targetLayout.x + targetLayout.width / 2;
-                  const targetY = targetLayout.y + targetLayout.height / 2;
-                  
-                  return (
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-                      <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                          <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--task-complete))" />
-                        </marker>
-                      </defs>
-                      <line
-                        x1={`${workerPin.x}%`}
-                        y1={`${workerPin.y}%`}
-                        x2={`${targetX}%`}
-                        y2={`${targetY}%`}
-                        stroke="hsl(var(--task-complete))"
-                        strokeWidth="2"
-                        strokeDasharray="5,5"
-                        markerEnd="url(#arrowhead)"
-                        className="animate-pulse"
-                      />
-                    </svg>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Zone Summary Grid */}
-            <ZoneSummaryGrid 
-              zones={zoneSummaryData}
-              onZoneClick={(zoneId) => {
-                toast.info(`Selected: ${displayZones.find(z => z.id === zoneId)?.name || zoneId}`);
-              }}
-            />
+            {/* Worker List */}
+            <Card className="bg-slate-900/30 border-slate-800">
+              <CardHeader className="border-b border-slate-800/50">
+                <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Active Workers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-6 gap-3">
+                  {workers.map((worker) => {
+                    const hasTask = worker.status !== 'idle';
+                    
+                    return (
+                      <button
+                        key={worker.id}
+                        onClick={() => setSelectedWorkerId(worker.id)}
+                        className={cn(
+                          'p-3 rounded-lg border transition-all text-left',
+                          'bg-slate-800/30 border-slate-700/50 hover:bg-slate-800/50 hover:border-slate-600',
+                          hasTask && 'border-amber-500/30'
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div 
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                            style={{ backgroundColor: worker.color }}
+                          >
+                            <span className="text-white">{worker.initials}</span>
+                          </div>
+                          <div className={cn(
+                            'w-2 h-2 rounded-full',
+                            worker.status === 'idle' ? 'bg-emerald-500' :
+                            worker.status === 'moving' ? 'bg-blue-500' : 'bg-amber-500'
+                          )} />
+                        </div>
+                        <p className="text-xs font-medium text-slate-200 truncate">{worker.name}</p>
+                        <p className="text-[10px] text-slate-500 truncate capitalize">
+                          {worker.position.zoneId.replace(/_/g, ' ')}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
+
+      {/* Worker Profile Modal */}
+      <WorkerProfileModal
+        worker={selectedWorker}
+        open={!!selectedWorkerId}
+        onClose={() => setSelectedWorkerId(null)}
+      />
     </div>
   );
 }
