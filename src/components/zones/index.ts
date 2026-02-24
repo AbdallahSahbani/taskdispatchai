@@ -8,3 +8,4 @@ export * from './WorkerPin';
 export * from './ZoneBlock';
 export * from './ZoneMapLegend';
 export * from './ZoneSummaryGrid';
+export * from './IsometricZoneMap';
