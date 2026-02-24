@@ -194,24 +194,7 @@ export default function Auth() {
             </div>
           )}
 
-          <form onSubmit={isSignup ? handleSignUp : handleSignIn} className="space-y-4">
-            {isSignup && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm text-muted-foreground">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    placeholder="John Smith"
-                    className="pl-10 bg-secondary/50 border-border/50"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
+          <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-muted-foreground">Email</Label>
               <Input
@@ -257,34 +240,10 @@ export default function Auth() {
               )}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isSignup ? 'Create Account' : 'Sign In'}
+              Sign In
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
-            {isSignup ? (
-              <button
-                onClick={() => {
-                  setView(signupRole === 'manager' ? 'manager-login' : 'employee-login');
-                  setError(null);
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Already have an account? <span className={cn(isManager ? 'text-primary' : 'text-info')}>Sign in</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setSignupRole(isManager ? 'manager' : 'employee');
-                  setView('signup');
-                  setError(null);
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Don't have an account? <span className={cn(isManager ? 'text-primary' : 'text-info')}>Sign up</span>
-              </button>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>
