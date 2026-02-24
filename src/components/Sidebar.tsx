@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, MapPin, Home, Wifi, Presentation, CheckCircle2, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Smartphone, Home, Wifi, Presentation, CheckCircle2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
   className?: string;
@@ -11,12 +10,12 @@ const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: MapPin, label: 'Zone Map', path: '/zones' },
   { icon: Users, label: 'Workers', path: '/workers' },
+  { icon: Smartphone, label: 'Worker App', path: '/worker-app' },
   { icon: Presentation, label: 'Pitch', path: '/pitch' },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
-  const { signOut, profile } = useAuth();
 
   return (
     <aside
@@ -68,16 +67,8 @@ export function Sidebar({ className }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border space-y-2">
-        {profile && (
-          <div className="hidden lg:flex items-center gap-2 px-2 mb-1">
-            <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-[10px] font-bold text-primary">
-              {profile.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M'}
-            </div>
-            <span className="text-[11px] text-foreground truncate flex-1">{profile.full_name || 'Manager'}</span>
-          </div>
-        )}
-        <div className="hidden lg:flex items-center gap-2 px-2">
+      <div className="p-4 border-t border-sidebar-border">
+        <div className="hidden lg:flex items-center gap-2 px-2 mb-2">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-success/10 border border-success/20">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
             <span className="text-[11px] text-success font-medium">System Online</span>
@@ -89,14 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
             <span className="text-[11px] text-muted-foreground">WiFi Positioning Active</span>
           </div>
         </div>
-        <button
-          onClick={signOut}
-          className="hidden lg:flex items-center gap-2 px-5 py-2 w-full rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span className="text-[11px]">Sign Out</span>
-        </button>
-        <div className="hidden lg:block text-[10px] text-sidebar-foreground/50 mt-2 px-2">
+        <div className="hidden lg:block text-[10px] text-sidebar-foreground/50 mt-3 px-2">
           <p className="font-display">Dispatch v4.0</p>
           <p className="mt-0.5">© 2026 Grand Hotel</p>
         </div>

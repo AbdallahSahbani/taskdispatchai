@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatchState } from '@/hooks/useDispatchState';
-import { useAuth } from '@/hooks/useAuth';
 import { dispatchApi } from '@/lib/api';
 import { initSpeechSynthesis, notifyWorkerOfTask, playNotificationPing } from '@/lib/speechNotification';
 import { StatusBadge } from '@/components/StatusBadge';
-import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX, LogOut } from 'lucide-react';
+import { MapPin, Clock, Check, Navigation, X, ChevronRight, User, Radio, RefreshCw, Volume2, VolumeX, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import type { TaskStatus, Priority } from '@/types/dispatch';
 
 export default function WorkerApp() {
   const { workers, tasks, zones, loading } = useDispatchState();
-  const { signOut, profile } = useAuth();
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   const [taskState, setTaskState] = useState<'idle' | 'seen' | 'on_my_way' | 'completed'>('idle');
@@ -174,12 +173,12 @@ export default function WorkerApp() {
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95 flex flex-col" onClick={handleUserInteraction}>
       <header className="px-4 py-4 border-b border-border bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <button
-            onClick={signOut}
-            className="p-2 rounded-xl bg-secondary/80 hover:bg-destructive/20 transition-all"
+          <Link 
+            to="/" 
+            className="p-2 rounded-xl bg-secondary/80 hover:bg-secondary transition-all"
           >
-            <LogOut className="w-5 h-5 text-muted-foreground hover:text-destructive transition-colors" />
-          </button>
+            <Home className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+          </Link>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
             <User className="w-5 h-5 text-primary" />
           </div>

@@ -66,33 +66,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string | null
-          full_name: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       task_assignments: {
         Row: {
           acknowledged_at: string | null
@@ -172,27 +145,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
       }
       wifi_ap_zones: {
         Row: {
@@ -284,7 +236,6 @@ export type Database = {
           on_shift: boolean
           reliability_score: number
           role: string
-          user_id: string | null
         }
         Insert: {
           avg_ack_time_seconds?: number
@@ -295,7 +246,6 @@ export type Database = {
           on_shift?: boolean
           reliability_score?: number
           role: string
-          user_id?: string | null
         }
         Update: {
           avg_ack_time_seconds?: number
@@ -306,7 +256,6 @@ export type Database = {
           on_shift?: boolean
           reliability_score?: number
           role?: string
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -366,16 +315,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "manager" | "employee"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -502,8 +445,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["manager", "employee"],
-    },
+    Enums: {},
   },
 } as const
