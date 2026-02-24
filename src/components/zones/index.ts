@@ -9,3 +9,7 @@ export * from './ZoneBlock';
 export * from './ZoneMapLegend';
 export * from './ZoneSummaryGrid';
 export * from './IsometricZoneMap';
+export * from './BlueprintZoneMap';
+export * from './BlueprintFloorPlan';
+export * from './BlueprintWorkerDot';
+export * from './BlueprintLegend';
