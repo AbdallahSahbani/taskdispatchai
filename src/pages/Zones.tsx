@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { useSimulationStore } from '@/stores/simulationStore';
-import { ProfessionalZoneMap } from '@/components/zones/ProfessionalZoneMap';
+import { IsometricZoneMap } from '@/components/zones/IsometricZoneMap';
 import { SimulationControls } from '@/components/zones/SimulationControls';
 import { WorkerProfileModal } from '@/components/workers/WorkerProfileModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -166,8 +166,8 @@ export default function Zones() {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <ProfessionalZoneMap
-                  className="min-h-[500px]"
+                <IsometricZoneMap
+                  className="min-h-[550px]"
                   onWorkerClick={(id) => setSelectedWorkerId(id)}
                   onZoneClick={(id) => setSelectedZoneId(id)}
                 />
