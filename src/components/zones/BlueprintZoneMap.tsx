@@ -107,6 +107,11 @@ export function BlueprintZoneMap({ className, onWorkerClick }: BlueprintZoneMapP
             boxShadow: '0 0 60px rgba(42,141,232,0.12), inset 0 0 80px rgba(13,74,140,0.06)',
           }}
         >
+          {/* Floor number badge — bold small in corner */}
+          <div className="absolute top-3 left-3 z-20 px-2.5 py-1 bg-[hsl(220,10%,8%)]/90 border border-[hsl(152,58%,42%)]/60 rounded font-mono pointer-events-none">
+            <span className="text-xs font-bold text-[hsl(152,58%,55%)] tracking-wider">FLOOR {floor?.num}</span>
+            <span className="ml-2 text-[9px] text-[hsl(0,0%,70%)] uppercase">{floor?.tag}</span>
+          </div>
           {/* Inner blueprint grid */}
           <div
             className="absolute inset-0 pointer-events-none"
