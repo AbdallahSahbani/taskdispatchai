@@ -29,22 +29,14 @@ export default function Zones() {
   const selectedWorker = workers.find(w => w.id === selectedWorkerId) || null;
 
   return (
-    <div className="flex h-screen bg-[hsl(210,60%,4%)] overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto p-4 bg-gradient-to-br from-[hsl(210,60%,4%)] via-[hsl(210,55%,6%)] to-[hsl(210,60%,4%)]">
+        <main className="flex-1 overflow-auto p-4 bg-background">
           <div className="space-y-4 max-w-[1800px] mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold text-[hsl(210,20%,90%)] font-mono tracking-wider">
-                  GRAND AZURE HOTEL — BLUEPRINT
-                </h1>
-                <p className="text-xs text-[hsl(210,40%,40%)] font-mono mt-0.5">
-                  Real-time staff tracking & task dispatch visualization
-                </p>
-              </div>
+            {/* Controls bar */}
+            <div className="flex items-center justify-end">
               <SimulationControls />
             </div>
 
