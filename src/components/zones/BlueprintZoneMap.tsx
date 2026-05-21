@@ -100,15 +100,8 @@ export function BlueprintZoneMap({ className, onWorkerClick }: BlueprintZoneMapP
       {/* Legend bar */}
       <BlueprintLegend />
 
-      {/* Floor title */}
-      <div className="relative z-10 flex items-baseline gap-3 px-6 pt-4 pb-2">
-        <span className="text-4xl font-mono text-[hsl(195,90%,50%)] opacity-25 leading-none">{floor?.num}</span>
-        <span className="text-lg font-bold text-[hsl(210,20%,90%)] tracking-wider">{floor?.name}</span>
-        <span className="text-[11px] text-[hsl(210,40%,40%)] font-mono ml-auto">{floor?.desc}</span>
-      </div>
-
       {/* Blueprint SVG viewport */}
-      <div className="relative px-4 pb-4">
+      <div className="relative px-4 pb-4 pt-3">
         <div className="relative border border-[hsl(210,70%,40%)] bg-[hsl(210,60%,4%)]/95 overflow-hidden"
           style={{
             boxShadow: '0 0 60px rgba(42,141,232,0.12), inset 0 0 80px rgba(13,74,140,0.06)',
