@@ -4,113 +4,112 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Professional PMS Palette — inspired by Oracle Opera & Choice Advantage
+   Deep navy chrome, crimson accent, slate neutrals, clean enterprise feel. */
+
 @layer base {
   :root {
-    /* Luxury Hotel Palette - Deep Navy & Gold */
-    --background: 222 47% 5%;
-    --foreground: 45 30% 96%;
+    --background: 210 20% 97%;
+    --foreground: 215 28% 15%;
 
-    --card: 222 40% 8%;
-    --card-foreground: 45 30% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 15%;
 
-    --popover: 222 40% 10%;
-    --popover-foreground: 45 30% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 15%;
 
-    /* Gold primary accent */
-    --primary: 43 74% 49%;
-    --primary-foreground: 222 47% 5%;
+    /* Oracle crimson primary */
+    --primary: 354 70% 44%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 14%;
-    --secondary-foreground: 45 20% 85%;
+    /* Corporate navy secondary */
+    --secondary: 215 45% 22%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 222 25% 12%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 215 16% 93%;
+    --muted-foreground: 215 14% 40%;
 
-    --accent: 222 30% 16%;
-    --accent-foreground: 45 30% 96%;
+    --accent: 215 35% 32%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 45 30% 98%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 25% 15%;
-    --input: 222 25% 18%;
-    --ring: 43 74% 49%;
+    --border: 215 16% 86%;
+    --input: 215 16% 88%;
+    --ring: 354 70% 44%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Status Colors - Refined palette */
-    --status-new: 210 100% 56%;
-    --status-assigned: 270 70% 60%;
-    --status-in-progress: 43 74% 49%;
-    --status-completed: 158 64% 42%;
-    --status-urgent: 0 84% 60%;
+    /* Status */
+    --status-new: 211 90% 45%;
+    --status-assigned: 262 60% 50%;
+    --status-in-progress: 32 95% 48%;
+    --status-completed: 152 60% 36%;
+    --status-urgent: 354 70% 44%;
 
-    /* Semantic tokens */
-    --success: 158 64% 42%;
-    --success-foreground: 222 47% 5%;
-    --warning: 43 74% 49%;
-    --warning-foreground: 222 47% 5%;
-    --info: 210 100% 56%;
-    --info-foreground: 222 47% 5%;
+    --success: 152 60% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 48%;
+    --warning-foreground: 0 0% 100%;
+    --info: 211 90% 45%;
+    --info-foreground: 0 0% 100%;
 
-    /* Zone category colors - Luxury palette */
-    --zone-floor: 222 45% 22%;
-    --zone-floor-light: 222 40% 32%;
-    --zone-floor-border: 210 70% 50%;
+    /* Zone categories */
+    --zone-floor: 215 45% 32%;
+    --zone-floor-light: 215 40% 55%;
+    --zone-floor-border: 215 60% 45%;
 
-    --zone-public: 173 58% 22%;
-    --zone-public-light: 173 55% 32%;
-    --zone-public-border: 173 58% 45%;
+    --zone-public: 188 55% 32%;
+    --zone-public-light: 188 50% 50%;
+    --zone-public-border: 188 60% 42%;
 
-    --zone-food: 35 75% 28%;
-    --zone-food-light: 38 70% 40%;
-    --zone-food-border: 43 74% 49%;
+    --zone-food: 32 80% 42%;
+    --zone-food-light: 32 75% 55%;
+    --zone-food-border: 32 85% 48%;
 
-    --zone-service: 280 45% 28%;
-    --zone-service-light: 280 50% 40%;
-    --zone-service-border: 280 60% 60%;
+    --zone-service: 262 35% 38%;
+    --zone-service-light: 262 40% 55%;
+    --zone-service-border: 262 50% 50%;
 
-    --zone-outdoor: 158 55% 22%;
-    --zone-outdoor-light: 158 50% 32%;
-    --zone-outdoor-border: 158 64% 42%;
+    --zone-outdoor: 152 50% 32%;
+    --zone-outdoor-light: 152 45% 45%;
+    --zone-outdoor-border: 152 60% 38%;
 
-    --zone-utility: 222 20% 28%;
-    --zone-utility-light: 222 15% 40%;
-    --zone-utility-border: 222 15% 55%;
+    --zone-utility: 215 12% 45%;
+    --zone-utility-light: 215 10% 60%;
+    --zone-utility-border: 215 14% 50%;
 
-    /* Task status colors */
-    --task-urgent: 0 84% 60%;
-    --task-high: 25 95% 53%;
-    --task-pending: 43 74% 49%;
-    --task-progress: 210 100% 56%;
-    --task-complete: 158 64% 42%;
+    /* Task / worker */
+    --task-urgent: 354 70% 44%;
+    --task-high: 25 90% 50%;
+    --task-pending: 32 95% 48%;
+    --task-progress: 211 90% 45%;
+    --task-complete: 152 60% 36%;
 
-    /* Worker status colors */
-    --worker-available: 158 64% 42%;
-    --worker-busy: 43 74% 49%;
-    --worker-break: 222 15% 50%;
-    --worker-offline: 222 25% 20%;
+    --worker-available: 152 60% 36%;
+    --worker-busy: 32 95% 48%;
+    --worker-break: 215 14% 50%;
+    --worker-offline: 215 14% 70%;
 
-    /* Glow effects */
-    --glow-primary: 0 0 30px hsl(43 74% 49% / 0.25);
-    --glow-success: 0 0 25px hsl(158 64% 42% / 0.25);
-    --glow-warning: 0 0 25px hsl(43 74% 49% / 0.3);
-    --glow-urgent: 0 0 30px hsl(0 84% 60% / 0.35);
+    --glow-primary: 0 1px 3px hsl(354 70% 44% / 0.15);
+    --glow-success: 0 1px 3px hsl(152 60% 36% / 0.15);
+    --glow-warning: 0 1px 3px hsl(32 95% 48% / 0.15);
+    --glow-urgent: 0 1px 4px hsl(354 70% 44% / 0.25);
 
-    /* Sidebar */
-    --sidebar-background: 222 45% 6%;
-    --sidebar-foreground: 45 20% 85%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 45 30% 96%;
-    --sidebar-border: 222 25% 14%;
-    --sidebar-ring: 43 74% 49%;
+    /* Sidebar — deep navy chrome */
+    --sidebar-background: 215 45% 14%;
+    --sidebar-foreground: 215 15% 82%;
+    --sidebar-primary: 354 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 40% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 35% 22%;
+    --sidebar-ring: 354 70% 50%;
 
-    /* Typography */
     --font-mono: 'JetBrains Mono', monospace;
     --font-sans: 'Inter', system-ui, sans-serif;
-    --font-display: 'Playfair Display', serif;
+    --font-display: 'Inter', system-ui, sans-serif;
   }
 }
 
@@ -118,108 +117,69 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: var(--font-sans);
   }
-
-  .font-mono {
-    font-family: var(--font-mono);
-  }
-  
-  .font-display {
-    font-family: var(--font-display);
-  }
+  .font-mono { font-family: var(--font-mono); }
+  .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
 }
 
 @layer components {
   .status-badge {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium font-mono uppercase tracking-wider;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium font-mono uppercase tracking-wide;
   }
-
-  .status-new {
-    @apply bg-[hsl(var(--status-new)/0.15)] text-[hsl(var(--status-new))] border border-[hsl(var(--status-new)/0.3)];
-  }
-
-  .status-assigned {
-    @apply bg-[hsl(var(--status-assigned)/0.15)] text-[hsl(var(--status-assigned))] border border-[hsl(var(--status-assigned)/0.3)];
-  }
-
-  .status-in-progress {
-    @apply bg-[hsl(var(--status-in-progress)/0.15)] text-[hsl(var(--status-in-progress))] border border-[hsl(var(--status-in-progress)/0.3)];
-  }
-
-  .status-completed {
-    @apply bg-[hsl(var(--status-completed)/0.15)] text-[hsl(var(--status-completed))] border border-[hsl(var(--status-completed)/0.3)];
-  }
-
+  .status-new { @apply bg-[hsl(var(--status-new)/0.12)] text-[hsl(var(--status-new))] border border-[hsl(var(--status-new)/0.25)]; }
+  .status-assigned { @apply bg-[hsl(var(--status-assigned)/0.12)] text-[hsl(var(--status-assigned))] border border-[hsl(var(--status-assigned)/0.25)]; }
+  .status-in-progress { @apply bg-[hsl(var(--status-in-progress)/0.12)] text-[hsl(var(--status-in-progress))] border border-[hsl(var(--status-in-progress)/0.25)]; }
+  .status-completed { @apply bg-[hsl(var(--status-completed)/0.12)] text-[hsl(var(--status-completed))] border border-[hsl(var(--status-completed)/0.25)]; }
   .status-urgent {
-    @apply bg-[hsl(var(--status-urgent)/0.15)] text-[hsl(var(--status-urgent))] border border-[hsl(var(--status-urgent)/0.3)];
+    @apply bg-[hsl(var(--status-urgent)/0.12)] text-[hsl(var(--status-urgent))] border border-[hsl(var(--status-urgent)/0.3)];
     animation: pulse-urgent 2s ease-in-out infinite;
   }
 
-  .card-glow {
-    @apply relative overflow-hidden;
-  }
-
+  .card-glow { @apply relative overflow-hidden; }
   .card-glow::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(var(--primary) / 0.06), transparent 40%);
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(var(--primary) / 0.04), transparent 40%);
   }
-
-  .card-glow:hover::before {
-    @apply opacity-100;
-  }
+  .card-glow:hover::before { @apply opacity-100; }
 
   .grid-lines {
-    background-image: 
-      linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.6) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
-  .data-panel {
-    @apply bg-card/50 backdrop-blur-sm border border-border rounded-lg p-4;
+  .data-panel { @apply bg-card border border-border rounded-md p-4 shadow-sm; }
+
+  .pms-table { @apply w-full text-sm; }
+  .pms-table thead th {
+    @apply text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/60 px-3 py-2 border-b border-border;
   }
+  .pms-table tbody td { @apply px-3 py-2 border-b border-border/60; }
+  .pms-table tbody tr:hover { @apply bg-muted/40; }
 }
 
 @layer utilities {
   .text-gradient-primary {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--info))] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] bg-clip-text text-transparent;
   }
-
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+  .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 }
 
 @keyframes pulse-urgent {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 hsl(var(--status-urgent) / 0.4);
-  }
-  50% {
-    opacity: 0.85;
-    box-shadow: 0 0 0 4px hsl(var(--status-urgent) / 0);
-  }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 hsl(var(--status-urgent) / 0.35); }
+  50% { opacity: 0.9; box-shadow: 0 0 0 4px hsl(var(--status-urgent) / 0); }
 }
 
 @keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
-
-.animate-slide-in {
-  animation: slide-in-right 0.3s ease-out;
-}
+.animate-slide-in { animation: slide-in-right 0.3s ease-out; }
 
 @keyframes scanline {
   0% { transform: translateY(-100%); }
