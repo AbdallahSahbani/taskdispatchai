@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, MapPin, Smartphone, Home, Wifi, Presentation, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, Users, MapPin, Smartphone, Home, Wifi, Presentation, CheckCircle2, ConciergeBell } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -8,6 +8,7 @@ interface SidebarProps {
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  { icon: ConciergeBell, label: 'Front Desk', path: '/front-desk' },
   { icon: MapPin, label: 'Zone Map', path: '/zones' },
   { icon: Users, label: 'Workers', path: '/workers' },
   { icon: Smartphone, label: 'Worker App', path: '/worker-app' },
