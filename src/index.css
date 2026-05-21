@@ -4,108 +4,108 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional PMS Palette — inspired by Oracle Opera & Choice Advantage
-   Deep navy chrome, crimson accent, slate neutrals, clean enterprise feel. */
+/* Professional dark palette — graphite grey + white + green accent. */
 
 @layer base {
   :root {
-    --background: 210 20% 97%;
-    --foreground: 215 28% 15%;
+    /* Core neutrals — graphite */
+    --background: 220 8% 11%;
+    --foreground: 0 0% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 28% 15%;
+    --card: 220 8% 14%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 28% 15%;
+    --popover: 220 8% 13%;
+    --popover-foreground: 0 0% 96%;
 
-    /* Oracle crimson primary */
-    --primary: 354 70% 44%;
+    /* Primary — emerald green accent */
+    --primary: 152 58% 42%;
     --primary-foreground: 0 0% 100%;
 
-    /* Corporate navy secondary */
-    --secondary: 215 45% 22%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary — lighter graphite */
+    --secondary: 220 6% 22%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 215 16% 93%;
-    --muted-foreground: 215 14% 40%;
+    --muted: 220 6% 18%;
+    --muted-foreground: 220 4% 65%;
 
-    --accent: 215 35% 32%;
+    --accent: 152 58% 42%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 48%;
+    /* Reserved for true errors only */
+    --destructive: 0 55% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 16% 86%;
-    --input: 215 16% 88%;
-    --ring: 354 70% 44%;
+    --border: 220 6% 22%;
+    --input: 220 6% 22%;
+    --ring: 152 58% 42%;
 
     --radius: 0.5rem;
 
-    /* Status */
-    --status-new: 211 90% 45%;
-    --status-assigned: 262 60% 50%;
-    --status-in-progress: 32 95% 48%;
-    --status-completed: 152 60% 36%;
-    --status-urgent: 354 70% 44%;
+    /* Status — green-forward palette */
+    --status-new: 200 70% 55%;
+    --status-assigned: 220 4% 70%;
+    --status-in-progress: 38 92% 55%;
+    --status-completed: 152 58% 42%;
+    --status-urgent: 0 60% 55%;
 
-    --success: 152 60% 36%;
+    --success: 152 58% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 32 95% 48%;
-    --warning-foreground: 0 0% 100%;
-    --info: 211 90% 45%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 220 8% 11%;
+    --info: 200 70% 55%;
     --info-foreground: 0 0% 100%;
 
-    /* Zone categories */
-    --zone-floor: 215 45% 32%;
-    --zone-floor-light: 215 40% 55%;
-    --zone-floor-border: 215 60% 45%;
+    /* Zone categories — desaturated greys & green */
+    --zone-floor: 220 6% 30%;
+    --zone-floor-light: 220 6% 45%;
+    --zone-floor-border: 220 6% 38%;
 
-    --zone-public: 188 55% 32%;
-    --zone-public-light: 188 50% 50%;
-    --zone-public-border: 188 60% 42%;
+    --zone-public: 200 25% 32%;
+    --zone-public-light: 200 25% 50%;
+    --zone-public-border: 200 30% 42%;
 
-    --zone-food: 32 80% 42%;
-    --zone-food-light: 32 75% 55%;
-    --zone-food-border: 32 85% 48%;
+    --zone-food: 38 50% 38%;
+    --zone-food-light: 38 50% 52%;
+    --zone-food-border: 38 60% 45%;
 
-    --zone-service: 262 35% 38%;
-    --zone-service-light: 262 40% 55%;
-    --zone-service-border: 262 50% 50%;
+    --zone-service: 220 6% 32%;
+    --zone-service-light: 220 6% 48%;
+    --zone-service-border: 220 6% 40%;
 
-    --zone-outdoor: 152 50% 32%;
-    --zone-outdoor-light: 152 45% 45%;
-    --zone-outdoor-border: 152 60% 38%;
+    --zone-outdoor: 152 58% 38%;
+    --zone-outdoor-light: 152 50% 50%;
+    --zone-outdoor-border: 152 58% 42%;
 
-    --zone-utility: 215 12% 45%;
-    --zone-utility-light: 215 10% 60%;
-    --zone-utility-border: 215 14% 50%;
+    --zone-utility: 220 4% 35%;
+    --zone-utility-light: 220 4% 50%;
+    --zone-utility-border: 220 4% 42%;
 
-    /* Task / worker */
-    --task-urgent: 354 70% 44%;
-    --task-high: 25 90% 50%;
-    --task-pending: 32 95% 48%;
-    --task-progress: 211 90% 45%;
-    --task-complete: 152 60% 36%;
+    --task-urgent: 0 60% 55%;
+    --task-high: 25 80% 55%;
+    --task-pending: 38 92% 55%;
+    --task-progress: 200 70% 55%;
+    --task-complete: 152 58% 42%;
 
-    --worker-available: 152 60% 36%;
-    --worker-busy: 32 95% 48%;
-    --worker-break: 215 14% 50%;
-    --worker-offline: 215 14% 70%;
+    --worker-available: 152 58% 42%;
+    --worker-busy: 38 92% 55%;
+    --worker-break: 220 4% 55%;
+    --worker-offline: 220 4% 35%;
 
-    --glow-primary: 0 1px 3px hsl(354 70% 44% / 0.15);
-    --glow-success: 0 1px 3px hsl(152 60% 36% / 0.15);
-    --glow-warning: 0 1px 3px hsl(32 95% 48% / 0.15);
-    --glow-urgent: 0 1px 4px hsl(354 70% 44% / 0.25);
+    --glow-primary: 0 1px 3px hsl(152 58% 42% / 0.20);
+    --glow-success: 0 1px 3px hsl(152 58% 42% / 0.20);
+    --glow-warning: 0 1px 3px hsl(38 92% 55% / 0.20);
+    --glow-urgent: 0 1px 4px hsl(0 60% 55% / 0.25);
 
-    /* Sidebar — deep navy chrome */
-    --sidebar-background: 215 45% 14%;
-    --sidebar-foreground: 215 15% 82%;
-    --sidebar-primary: 354 70% 50%;
+    /* Sidebar — darker graphite */
+    --sidebar-background: 220 10% 8%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 152 58% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 40% 20%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 35% 22%;
-    --sidebar-ring: 354 70% 50%;
+    --sidebar-accent: 220 8% 16%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 220 6% 18%;
+    --sidebar-ring: 152 58% 45%;
 
     --font-mono: 'JetBrains Mono', monospace;
     --font-sans: 'Inter', system-ui, sans-serif;
@@ -129,12 +129,12 @@
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium font-mono uppercase tracking-wide;
   }
-  .status-new { @apply bg-[hsl(var(--status-new)/0.12)] text-[hsl(var(--status-new))] border border-[hsl(var(--status-new)/0.25)]; }
-  .status-assigned { @apply bg-[hsl(var(--status-assigned)/0.12)] text-[hsl(var(--status-assigned))] border border-[hsl(var(--status-assigned)/0.25)]; }
-  .status-in-progress { @apply bg-[hsl(var(--status-in-progress)/0.12)] text-[hsl(var(--status-in-progress))] border border-[hsl(var(--status-in-progress)/0.25)]; }
-  .status-completed { @apply bg-[hsl(var(--status-completed)/0.12)] text-[hsl(var(--status-completed))] border border-[hsl(var(--status-completed)/0.25)]; }
+  .status-new { @apply bg-[hsl(var(--status-new)/0.15)] text-[hsl(var(--status-new))] border border-[hsl(var(--status-new)/0.3)]; }
+  .status-assigned { @apply bg-[hsl(var(--status-assigned)/0.15)] text-[hsl(var(--status-assigned))] border border-[hsl(var(--status-assigned)/0.3)]; }
+  .status-in-progress { @apply bg-[hsl(var(--status-in-progress)/0.15)] text-[hsl(var(--status-in-progress))] border border-[hsl(var(--status-in-progress)/0.3)]; }
+  .status-completed { @apply bg-[hsl(var(--status-completed)/0.15)] text-[hsl(var(--status-completed))] border border-[hsl(var(--status-completed)/0.3)]; }
   .status-urgent {
-    @apply bg-[hsl(var(--status-urgent)/0.12)] text-[hsl(var(--status-urgent))] border border-[hsl(var(--status-urgent)/0.3)];
+    @apply bg-[hsl(var(--status-urgent)/0.15)] text-[hsl(var(--status-urgent))] border border-[hsl(var(--status-urgent)/0.3)];
     animation: pulse-urgent 2s ease-in-out infinite;
   }
 
@@ -142,7 +142,7 @@
   .card-glow::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(var(--primary) / 0.04), transparent 40%);
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(var(--primary) / 0.06), transparent 40%);
   }
   .card-glow:hover::before { @apply opacity-100; }
 
@@ -165,7 +165,7 @@
 
 @layer utilities {
   .text-gradient-primary {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent;
   }
   .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 }

@@ -100,20 +100,18 @@ export function BlueprintZoneMap({ className, onWorkerClick }: BlueprintZoneMapP
       {/* Legend bar */}
       <BlueprintLegend />
 
-      {/* Floor title */}
-      <div className="relative z-10 flex items-baseline gap-3 px-6 pt-4 pb-2">
-        <span className="text-4xl font-mono text-[hsl(195,90%,50%)] opacity-25 leading-none">{floor?.num}</span>
-        <span className="text-lg font-bold text-[hsl(210,20%,90%)] tracking-wider">{floor?.name}</span>
-        <span className="text-[11px] text-[hsl(210,40%,40%)] font-mono ml-auto">{floor?.desc}</span>
-      </div>
-
       {/* Blueprint SVG viewport */}
-      <div className="relative px-4 pb-4">
+      <div className="relative px-4 pb-4 pt-3">
         <div className="relative border border-[hsl(210,70%,40%)] bg-[hsl(210,60%,4%)]/95 overflow-hidden"
           style={{
             boxShadow: '0 0 60px rgba(42,141,232,0.12), inset 0 0 80px rgba(13,74,140,0.06)',
           }}
         >
+          {/* Floor number badge — bold small in corner */}
+          <div className="absolute top-3 left-3 z-20 px-2.5 py-1 bg-[hsl(220,10%,8%)]/90 border border-[hsl(152,58%,42%)]/60 rounded font-mono pointer-events-none">
+            <span className="text-xs font-bold text-[hsl(152,58%,55%)] tracking-wider">FLOOR {floor?.num}</span>
+            <span className="ml-2 text-[9px] text-[hsl(0,0%,70%)] uppercase">{floor?.tag}</span>
+          </div>
           {/* Inner blueprint grid */}
           <div
             className="absolute inset-0 pointer-events-none"
