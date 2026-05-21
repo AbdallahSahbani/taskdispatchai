@@ -143,12 +143,29 @@ function ResTable({ rows, showRoom = true }: { rows: Reservation[]; showRoom?: b
 
 export default function FrontDesk() {
   const [search, setSearch] = useState('');
+  const [tab, setTab] = useState('arrivals');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+
   const arrivals = getArrivals();
   const departures = getDepartures();
   const inHouse = getInHouse();
   const vacant = getVacantRooms();
   const ooo = getOutOfOrder();
   const thirdParty = getThirdPartyBookings();
+
+  // Availability per room type (vacant_clean + vacant_dirty)
+  const availabilityByType = useMemo(() => {
+    const map: Record<string, { total: number; available: number }> = {};
+    for (const t of ROOM_TYPES) map[t.code] = { total: 0, available: 0 };
+    for (const r of ROOMS) {
+      if (!map[r.typeCode]) map[r.typeCode] = { total: 0, available: 0 };
+      map[r.typeCode].total += 1;
+      if (r.status === 'vacant_clean' || r.status === 'vacant_dirty') {
+        map[r.typeCode].available += 1;
+      }
+    }
+    return map;
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search) return RESERVATIONS;
@@ -159,6 +176,16 @@ export default function FrontDesk() {
       r.roomNumber?.includes(q),
     );
   }, [search]);
+
+  const openAvailableRooms = (code: string) => {
+    setTypeFilter(code);
+    setTab('rooms');
+  };
+
+  const roomsForTab = useMemo(() => {
+    if (typeFilter) return ROOMS.filter(r => r.typeCode === typeFilter);
+    return ROOMS;
+  }, [typeFilter]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -200,7 +227,7 @@ export default function FrontDesk() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="arrivals">
+          <Tabs value={tab} onValueChange={(v) => { setTab(v); if (v !== 'rooms') setTypeFilter(null); }}>
             <TabsList className="bg-card border border-border">
               <TabsTrigger value="arrivals">Arrivals · {arrivals.length}</TabsTrigger>
               <TabsTrigger value="inhouse">In-House · {inHouse.length}</TabsTrigger>
@@ -225,25 +252,57 @@ export default function FrontDesk() {
             <TabsContent value="inhouse" className="mt-4"><ResTable rows={inHouse} /></TabsContent>
             <TabsContent value="departures" className="mt-4"><ResTable rows={departures} /></TabsContent>
 
-            <TabsContent value="rooms" className="mt-4">
-              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                {ROOMS.map(r => (
-                  <div key={r.number}
-                       className={`p-2 rounded border text-center ${statusTone[r.status]}`}
-                       title={r.note}>
-                    <div className="font-mono font-semibold">{r.number}</div>
-                    <div className="text-[10px] font-mono opacity-80">{r.typeCode}</div>
+            <TabsContent value="rooms" className="mt-4 space-y-3">
+              {typeFilter && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Badge variant="outline" className="border-primary/40 text-primary">
+                    Filter: {typeFilter} — {getRoomType(typeFilter)?.name}
+                  </Badge>
+                  <Button size="sm" variant="ghost" onClick={() => setTypeFilter(null)}>Clear filter</Button>
+                  <span className="text-muted-foreground text-xs">
+                    Showing {roomsForTab.length} rooms ({roomsForTab.filter(r => r.status==='vacant_clean'||r.status==='vacant_dirty').length} available)
+                  </span>
+                </div>
+              )}
+              {typeFilter ? (
+                <div className="border border-border rounded-md bg-card overflow-auto">
+                  <table className="pms-table">
+                    <thead><tr><th>Room</th><th>Floor</th><th>Type</th><th>Condition / Status</th><th>Note</th></tr></thead>
+                    <tbody>
+                      {roomsForTab.map(r => (
+                        <tr key={r.number}>
+                          <td className="font-mono font-semibold">{r.number}</td>
+                          <td>{r.floor}</td>
+                          <td className="font-mono text-xs">{r.typeCode}</td>
+                          <td><Badge variant="outline" className={statusTone[r.status]}>{r.status.replace('_',' ')}</Badge></td>
+                          <td className="text-muted-foreground text-xs">{r.note ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                    {ROOMS.map(r => (
+                      <div key={r.number}
+                          className={`p-2 rounded border text-center ${statusTone[r.status]}`}
+                          title={r.note}>
+                        <div className="font-mono font-semibold">{r.number}</div>
+                        <div className="text-[10px] font-mono opacity-80">{r.typeCode}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="flex gap-4 mt-4 text-xs flex-wrap">
-                {(['vacant_clean','vacant_dirty','occupied','out_of_order','maintenance'] as RoomStatus[]).map(s => (
-                  <div key={s} className="flex items-center gap-1.5">
-                    <span className={`w-3 h-3 rounded border ${statusTone[s]}`} />
-                    <span className="text-muted-foreground">{s.replace('_',' ')}</span>
+                  <div className="flex gap-4 mt-4 text-xs flex-wrap">
+                    {(['vacant_clean','vacant_dirty','occupied','out_of_order','maintenance'] as RoomStatus[]).map(s => (
+                      <div key={s} className="flex items-center gap-1.5">
+                        <span className={`w-3 h-3 rounded border ${statusTone[s]}`} />
+                        <span className="text-muted-foreground">{s.replace('_',' ')}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="ooo" className="mt-4">
@@ -270,17 +329,50 @@ export default function FrontDesk() {
             <TabsContent value="types" className="mt-4">
               <div className="border border-border rounded-md bg-card overflow-auto">
                 <table className="pms-table">
-                  <thead><tr><th>Code</th><th>Room Type</th><th>Bed Config</th><th>Max Occ.</th><th className="text-right">Base Rate</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Code</th><th>Room Type</th><th>Bed Config</th><th>Max Occ.</th>
+                      <th className="text-right">Base Rate</th>
+                      <th className="text-center">Available</th>
+                      <th></th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {ROOM_TYPES.map(t => (
-                      <tr key={t.code}>
-                        <td><span className="font-mono font-semibold px-2 py-0.5 bg-muted rounded">{t.code}</span></td>
-                        <td className="font-medium">{t.name}</td>
-                        <td>{t.beds}</td>
-                        <td>{t.maxOccupancy}</td>
-                        <td className="text-right font-mono">${t.baseRate}</td>
-                      </tr>
-                    ))}
+                    {ROOM_TYPES.map(t => {
+                      const a = availabilityByType[t.code] ?? { total: 0, available: 0 };
+                      const isOut = a.available === 0;
+                      return (
+                        <tr key={t.code}>
+                          <td><span className="font-mono font-semibold px-2 py-0.5 bg-muted rounded">{t.code}</span></td>
+                          <td className="font-medium">
+                            {t.name}
+                            <span className={`ml-2 text-xs font-mono ${isOut ? 'text-destructive' : 'text-[hsl(var(--success))]'}`}>
+                              · {a.available} of {a.total} available
+                            </span>
+                          </td>
+                          <td>{t.beds}</td>
+                          <td>{t.maxOccupancy}</td>
+                          <td className="text-right font-mono">${t.baseRate}</td>
+                          <td className="text-center">
+                            <Badge variant="outline" className={isOut
+                              ? 'border-destructive/40 text-destructive'
+                              : 'border-[hsl(var(--success))]/40 text-[hsl(var(--success))]'}>
+                              {a.available}/{a.total}
+                            </Badge>
+                          </td>
+                          <td className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isOut}
+                              onClick={() => openAvailableRooms(t.code)}
+                            >
+                              View rooms
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -290,6 +382,9 @@ export default function FrontDesk() {
           </Tabs>
         </main>
       </div>
+
+      <FrontDeskChat onNavigate={(t) => { setTab(t); if (t !== 'rooms') setTypeFilter(null); }} />
     </div>
   );
 }
+
