@@ -40,13 +40,11 @@ export default function Pitch() {
                     and real-time state management to optimize staff allocation and guest satisfaction.
                   </p>
                   <div className="flex gap-4">
-                    <Button size="lg" className="gap-2">
-                      <Building2 className="w-5 h-5" />
-                      Schedule Demo
-                    </Button>
-                    <Button size="lg" variant="outline" className="gap-2">
-                      View Dashboard
-                      <ArrowRight className="w-4 h-4" />
+                    <Button size="lg" variant="outline" className="gap-2" asChild>
+                      <a href="/">
+                        View Dashboard
+                        <ArrowRight className="w-4 h-4" />
+                      </a>
                     </Button>
                   </div>
                 </div>
@@ -259,10 +257,6 @@ export default function Pitch() {
                 Join leading luxury hotels using data-driven dispatch to deliver exceptional guest experiences.
               </p>
               <div className="flex justify-center gap-4">
-                <Button size="lg" className="gap-2 px-8">
-                  <Building2 className="w-5 h-5" />
-                  Request Pilot Program
-                </Button>
                 <Button size="lg" variant="outline" className="gap-2">
                   Download Whitepaper
                 </Button>

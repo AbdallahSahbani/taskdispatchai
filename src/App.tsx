@@ -8,6 +8,7 @@ import Workers from "./pages/Workers";
 import Zones from "./pages/Zones";
 import WorkerApp from "./pages/WorkerApp";
 import Pitch from "./pages/Pitch";
+import FrontDesk from "./pages/FrontDesk";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/workers" element={<Workers />} />
           <Route path="/zones" element={<Zones />} />
           <Route path="/pitch" element={<Pitch />} />
+          <Route path="/front-desk" element={<FrontDesk />} />
           <Route path="/analytics" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
