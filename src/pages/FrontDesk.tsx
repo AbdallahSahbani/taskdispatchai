@@ -18,6 +18,7 @@ import {
 } from '@/data/frontDeskMock';
 import { ROOM_TYPES, getRoomType } from '@/lib/roomTypes';
 import { toast } from 'sonner';
+import { FrontDeskChat } from '@/components/frontdesk/FrontDeskChat';
 
 const statusTone: Record<RoomStatus, string> = {
   vacant_clean: 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.3)]',
